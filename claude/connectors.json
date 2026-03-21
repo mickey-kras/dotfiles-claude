@@ -1,0 +1,46 @@
+{
+  "_comment": "Source of truth for all expected MCPs and connectors. Claude auto-updates this when connectors change. Hooks check it on startup.",
+  "local": {
+    "context7": {
+      "description": "Context7 — code context MCP",
+      "requires_secret": "CONTEXT7_API_KEY",
+      "secret_url": "https://context7.com/settings"
+    },
+    "playwright": {
+      "description": "Playwright — browser automation MCP",
+      "requires_secret": null
+    }
+  },
+  "cloud": {
+    "slack": {
+      "description": "Slack — messaging & channels",
+      "setup": "Claude app > Settings > Integrations > Slack",
+      "added_from": "mac2"
+    },
+    "gmail": {
+      "description": "Gmail — email read/draft/search",
+      "setup": "Claude app > Settings > Integrations > Gmail",
+      "added_from": "mac2"
+    },
+    "google_calendar": {
+      "description": "Google Calendar — events & scheduling",
+      "setup": "Claude app > Settings > Integrations > Google Calendar",
+      "added_from": "mac2"
+    },
+    "atlassian": {
+      "description": "Atlassian — Jira & Confluence",
+      "setup": "Claude app > Settings > Integrations > Atlassian",
+      "added_from": "mac2"
+    },
+    "google_drive": {
+      "description": "Google Drive — file search & fetch",
+      "setup": "Claude app > Settings > Integrations > Google Drive",
+      "added_from": "mac2"
+    }
+  },
+  "builtin": {
+    "claude-mem": {
+      "description": "Memory search — always available, no setup needed"
+    }
+  }
+}

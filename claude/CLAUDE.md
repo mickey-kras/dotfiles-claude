@@ -29,6 +29,7 @@
 - Before making big changes, outline the plan and confirm.
 
 ## MCP & Tools
+- Config is synced via ~/dotfiles-claude. The auto-sync hooks handle everything.
 - Prefer CLI tools (gh, jq, curl, ripgrep) over browser when possible.
 - When I ask about calendar, tasks, or messages — use the appropriate MCP if available.
 
