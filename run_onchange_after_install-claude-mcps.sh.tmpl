@@ -1,37 +1,44 @@
 #!/usr/bin/env bash
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
-# Installs MCP servers into Claude Code via `claude mcp add --scope user`.
-# OAuth-based MCPs trigger browser auth on first use — no API keys needed.
-# Re-runs whenever this template's rendered content changes.
+# Registers MCP servers in Claude Code via `claude mcp add --scope user`.
+# Idempotent: removes then re-adds each server independently.
+# OAuth MCPs trigger browser auth on first use — no keys needed.
+# Re-runs only when template output changes (chezmoi run_onchange_).
 #
 # hash: # {{ include "dot_cursor/mcp.json.tmpl" | sha256sum }}
 
-set -euo pipefail
+set -uo pipefail
 
 command -v claude >/dev/null 2>&1 || { echo "claude CLI not found, skipping MCP setup"; exit 0; }
 
 echo "Configuring Claude Code MCP servers..."
 
-# Remove existing managed MCPs to avoid duplicates, then re-add
-for name in sequential-thinking playwright context7 github; do
+FAILED=0
+
+add_mcp() {
+  local name="$1"; shift
   claude mcp remove --scope user "$name" 2>/dev/null || true
-done
+  if claude mcp add --scope user "$@" 2>/dev/null; then
+    echo "  + $name"
+  else
+    echo "  ! $name (failed — run 'claude mcp add --scope user $*' manually)"
+    FAILED=$((FAILED + 1))
+  fi
+}
 
-# Sequential Thinking (official MCP, local, no auth)
-claude mcp add --scope user sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
-echo "  + sequential-thinking"
+# Local MCPs (stdio, no auth)
+add_mcp sequential-thinking sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
+add_mcp playwright playwright -- npx -y @playwright/mcp@latest
 
-# Playwright (local, no auth)
-claude mcp add --scope user playwright -- npx -y @playwright/mcp@latest
-echo "  + playwright"
-
-# Context7 (remote HTTP, OAuth — browser auth on first use)
-claude mcp add --scope user --transport http --url "https://mcp.context7.com/mcp" context7
-echo "  + context7 (OAuth — will prompt in browser on first use)"
-
-# GitHub (remote HTTP, OAuth — browser auth on first use)
-claude mcp add --scope user --transport http --url "https://api.githubcopilot.com/mcp" github
-echo "  + github (OAuth — will prompt in browser on first use)"
+# Remote MCPs (HTTP, OAuth — browser auth on first use)
+add_mcp context7 --transport http context7 "https://mcp.context7.com/mcp"
+add_mcp github --transport http github "https://api.githubcopilot.com/mcp"
 
 echo ""
-echo "Claude Code MCPs configured. OAuth servers will prompt to authorize in your browser on first use."
+if [ "$FAILED" -eq 0 ]; then
+  echo "All MCPs configured. OAuth servers will prompt in browser on first use."
+else
+  echo "$FAILED MCP(s) failed to register. See above for manual commands."
+fi
+
+exit 0

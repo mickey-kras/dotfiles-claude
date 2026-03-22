@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(command -v chezmoi)",
+      "Bash(chezmoi managed:*)",
+      "Read(//Users/mickey/.claude/**)",
+      "Read(//Users/mickey/.cursor/**)",
+      "Read(//Users/mickey/.codex/**)",
+      "Read(//Users/mickey/**)",
+      "Bash(command -v claude)",
+      "Bash(claude mcp:*)",
+      "Bash(git:*)",
+      "Bash(brew install:*)",
+      "Bash(chezmoi --version)",
+      "Bash(chezmoi source-path:*)",
+      "Bash(chezmoi diff:*)",
+      "Bash(chezmoi verify:*)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(bash -x run_onchange_after_install-claude-mcps.sh.tmpl)",
+      "Bash(chezmoi git:*)"
+    ]
+  }
+}

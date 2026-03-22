@@ -1,6 +1,7 @@
-{{- /* Chezmoi config — runs once per machine during `chezmoi init` */ -}}
+{{- /* Chezmoi config — runs during `chezmoi init`. Re-run init to change values. */ -}}
+
 {{- $email := promptStringOnce . "email" "Email address" -}}
-{{- $machine := promptChoiceOnce . "machine" "Machine type" (list "personal" "work") -}}
+{{- $machine := promptStringOnce . "machine" "Name for this machine (e.g. personal-mac, work-laptop)" -}}
 
 [data]
   email = {{ $email | quote }}
