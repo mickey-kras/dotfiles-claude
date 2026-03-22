@@ -1,17 +1,12 @@
-# Secrets & local overrides — NEVER commit
-claude/.credentials.json
-claude/settings.local.json
-claude/projects/
-claude/.connectors-enabled
-.env
-.env.local
-.env.*.local
-*.key
-*.pem
+# Secrets (never commit)
+*.age
+key.txt
+.env*
 
 # OS junk
 .DS_Store
 Thumbs.db
-*.swp
-*.swo
-*~
+desktop.ini
+
+# chezmoi local state
+.chezmoistate.boltdb

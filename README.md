@@ -1,134 +1,115 @@
 # dotfiles-claude
 
-Claude Code configuration synced across all machines. One repo, every device, always in sync.
-
-## What's inside
-
-```
-claude/
-  CLAUDE.md              ← Global instructions loaded in every session
-  settings.json          ← Permissions, deny list, env vars, hooks
-  .mcp.json              ← Local MCP servers (context7, playwright, etc.)
-  connectors.json        ← Manifest of ALL expected MCPs + cloud connectors
-  rules/                 ← Code style, security, testing rules
-  skills/                ← Reusable skills (shared across machines)
-  agents/                ← Custom subagent definitions
-  hooks/scripts/
-    security-audit.sh    ← Validates config, blocks on critical issues
-    startup-sync.sh      ← Pulls latest, pushes local drift
-    check-connectors.sh  ← Detects missing MCPs/connectors, prompts to fix
-    auto-commit-config.sh← Auto-commits & pushes any config change
-scripts/
-  install.sh             ← Cross-platform installer (macOS/Linux/WSL/Windows)
-  setup-secrets.sh       ← Interactive: API keys + cloud connector auth
-  export.sh              ← Export live config back into the repo
-  diff.sh                ← Show drift between live config and repo
-```
+AI toolchain configuration synced across all machines with [chezmoi](https://chezmoi.io). One command sets up Claude Code, Cursor, and Codex with shared MCPs, rules, and instructions. No API keys to manage — OAuth MCPs authorize in the browser on first use.
 
 ## Quick start — new machine
 
+**macOS / Linux / WSL:**
 ```bash
-# 1. Clone
-git clone git@github.com:mickey-kras/dotfiles-claude.git ~/dotfiles-claude
-
-# 2. Install (symlinks config into ~/.claude/, checks dependencies)
-~/dotfiles-claude/scripts/install.sh
-
-# 3. Interactive setup — API keys + cloud connectors
-~/dotfiles-claude/scripts/setup-secrets.sh
+bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/main/scripts/bootstrap.sh)
 ```
 
-Step 3 walks you through everything interactively: enters API keys, offers to open Claude app settings for each cloud connector (Slack, Gmail, Calendar, Atlassian, Drive), then verifies what's connected.
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/main/scripts/bootstrap.ps1 | iex
+```
 
-## All managed MCPs & connectors
+The bootstrap script installs chezmoi, clones this repo, prompts for email and machine type, then configures all detected AI tools. OAuth MCPs (Context7, GitHub) will prompt you to authorize in the browser the first time you use them.
 
-| Server | Type | Synced via | Auth |
-|--------|------|-----------|------|
-| context7 | Local (HTTP) | .mcp.json | API key → `setup-secrets.sh` |
-| playwright | Local (stdio) | .mcp.json | None |
-| Slack | Cloud connector | Claude account | OAuth in app |
-| Gmail | Cloud connector | Claude account | OAuth in app |
-| Google Calendar | Cloud connector | Claude account | OAuth in app |
-| Atlassian | Cloud connector | Claude account | OAuth in app |
-| Google Drive | Cloud connector | Claude account | OAuth in app |
-| claude-mem | Built-in | Always available | None |
+**If chezmoi is already installed:**
+```bash
+chezmoi init --apply git@github.com:mickey-kras/dotfiles-claude.git
+```
 
-The `connectors.json` manifest tracks all of these. On every startup, `check-connectors.sh` compares what's expected vs what's active and tells you what's missing.
+## What gets configured
 
-## How auto-sync works
+| Tool | MCP config | AI instructions |
+|------|-----------|-----------------|
+| Claude Code | `~/.claude.json` (via `claude mcp add`) | `~/.claude/CLAUDE.md` + `settings.json` + `rules/` |
+| Cursor | `~/.cursor/mcp.json` | `~/.cursor/rules/global.mdc` |
+| Codex | `~/.codex/config.toml` | Inline in `config.toml` |
 
-Four hooks fire automatically:
+## MCP servers
 
-**On startup** (`SessionStart`):
-1. `security-audit.sh` — validates JSON, checks for hardcoded secrets, prompt injection, missing deny-list protections. Blocks on critical issues.
-2. `startup-sync.sh` — pulls latest from GitHub, re-links if symlinks broke, pushes any local drift.
-3. `check-connectors.sh` — reads `connectors.json`, checks which MCPs/connectors are missing, prints actionable steps.
+| Server | Transport | Auth | What it does |
+|--------|-----------|------|-------------|
+| Sequential Thinking | stdio (npx) | None | Structured step-by-step problem solving |
+| Playwright | stdio (npx) | None | Browser automation and testing |
+| Context7 | Remote HTTP | OAuth | Up-to-date library docs and code context |
+| GitHub | Remote HTTP | OAuth | Repos, issues, PRs, code search |
 
-**After every tool use** (`PostToolUse` on Write/Edit/Bash):
-4. `auto-commit-config.sh` — if anything in `claude/` changed, commits and pushes silently.
+OAuth servers open your browser to authorize on first use. Each machine can use a different account (personal vs work GitHub, etc.) with no extra config.
 
-Net effect: add an MCP on one machine → auto-pushed → auto-pulled on all others at next startup.
+## How it works
+
+chezmoi manages dotfiles as templates in a git repo. When you run `chezmoi apply`:
+
+1. Writes `~/.cursor/mcp.json` and `~/.codex/config.toml` with all MCPs
+2. Runs `claude mcp add` to register MCPs in Claude Code's runtime config
+3. Copies instruction files (CLAUDE.md, Cursor rules) to the right locations
+
+Templates use chezmoi variables (`.chezmoi.os`, `.machine`) so you can add machine-specific behavior if needed.
+
+## Updating
+
+After changing templates in the repo:
+```bash
+chezmoi apply       # Apply locally
+```
+
+On other machines:
+```bash
+chezmoi update      # Pull + apply in one step
+```
+
+## Adding a new MCP
+
+1. Add it to `dot_cursor/mcp.json.tmpl` (JSON format)
+2. Add it to `dot_codex/config.toml.tmpl` (TOML format)
+3. Add the `claude mcp add` command to `run_onchange_after_install-claude-mcps.sh.tmpl` (and `.ps1.tmpl`)
+4. Commit, push, `chezmoi update` on other machines
+
+## Changing machine config
+
+```bash
+chezmoi edit-config    # Opens ~/.config/chezmoi/chezmoi.toml
+chezmoi apply          # Re-render templates with new values
+```
+
+## File structure
+
+```
+.chezmoi.toml.tmpl                    # Machine config prompts (email, type)
+.chezmoiignore                        # Files chezmoi skips
+dot_cursor/
+  mcp.json.tmpl                       # → ~/.cursor/mcp.json
+  rules/global.mdc                    # → ~/.cursor/rules/global.mdc
+dot_codex/
+  config.toml.tmpl                    # → ~/.codex/config.toml
+dot_claude/
+  CLAUDE.md                           # → ~/.claude/CLAUDE.md
+  settings.json                       # → ~/.claude/settings.json
+  rules/                              # → ~/.claude/rules/
+run_onchange_after_install-claude-mcps.sh.tmpl   # Unix: claude mcp add
+run_onchange_after_install-claude-mcps.ps1.tmpl  # Windows: claude mcp add
+scripts/
+  bootstrap.sh                        # macOS/Linux one-liner
+  bootstrap.ps1                       # Windows one-liner
+```
 
 ## Platform support
 
-| Platform | Method | Notes |
-|----------|--------|-------|
-| macOS | Symlinks | Native, full support |
-| Linux (Debian/Ubuntu/Fedora/Arch) | Symlinks | Same as macOS |
-| WSL2 | Symlinks | Runs in Linux layer |
-| Windows (Git Bash/MSYS) | File copy | Fallback; use `export.sh` to sync back |
+| Platform | Status |
+|----------|--------|
+| macOS (ARM/Intel) | Full |
+| Linux (Debian/Ubuntu/Fedora/Arch) | Full |
+| WSL2 | Full |
+| Windows 11 | Full |
 
-Dependencies: `git`, `jq`, `node`, `npx`. The installer checks and tells you how to install per-platform.
+## Dependencies
 
-## Adding a new local MCP
+**Required:** git, chezmoi
 
-1. Add it to `claude/.mcp.json` on any machine
-2. Auto-commit hook pushes it
-3. Other machines pull on next startup
-4. If it needs a key: add the key name to `claude/connectors.json` under `local`, then run `scripts/setup-secrets.sh` on each machine
+**For local MCPs:** node, npx (Sequential Thinking, Playwright)
 
-## Adding a new cloud connector
-
-1. Add it to `claude/connectors.json` under `cloud` with description and setup instructions
-2. Commit and push
-3. On each machine, `check-connectors.sh` will flag it as missing and tell you where to enable it
-4. Or run `scripts/setup-secrets.sh` which walks through all connectors interactively
-
-## Files that never get committed
-
-| File | Contains |
-|------|----------|
-| `~/.claude/settings.local.json` | API keys, machine-local env vars |
-| `~/.claude/.credentials.json` | Claude auth tokens |
-| `~/.claude/.connectors-enabled` | Cloud connectors enabled on this machine |
-| `~/.claude/projects/` | Auto-generated session memory |
-
-## Useful commands
-
-```bash
-~/dotfiles-claude/scripts/diff.sh            # What's different locally vs repo
-~/dotfiles-claude/scripts/export.sh          # Export live changes to repo
-~/dotfiles-claude/scripts/setup-secrets.sh   # Re-run API key + connector setup
-~/dotfiles-claude/scripts/install.sh         # Re-run installer
-
-# Manual sync
-cd ~/dotfiles-claude && git pull
-
-# Manual security check
-~/dotfiles-claude/claude/hooks/scripts/security-audit.sh
-
-# Check connector status
-~/dotfiles-claude/claude/hooks/scripts/check-connectors.sh
-```
-
-## Troubleshooting
-
-**Startup says "merge conflict"** — `cd ~/dotfiles-claude && git status` and resolve manually.
-
-**MCP not connecting** — Run `scripts/setup-secrets.sh` to check API keys. Or `/mcp` in Claude Code to see status.
-
-**Hooks not firing** — `jq '.hooks' ~/.claude/settings.json` should show SessionStart + PostToolUse. Re-run `install.sh` if empty.
-
-**Cloud connector missing after setup** — Enable it in Claude app > Settings > Integrations. These are per-account OAuth, not config-file based.
-
-**Windows: changes not syncing** — Installer copies files instead of symlinking. After changes, run `scripts/export.sh` then commit.
+**Optional:** jq (debugging)
