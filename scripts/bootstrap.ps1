@@ -105,23 +105,18 @@ New-Item -ItemType Directory -Path $configDir -Force | Out-Null
 "@ | Set-Content "$configDir\chezmoi.toml"
 Write-Host "  + Config saved" -ForegroundColor Green
 
-# --- Clean stale chezmoi config keys ---
-$configFile = "$env:USERPROFILE\.config\chezmoi\chezmoi.toml"
-if (Test-Path $configFile) {
-    $content = Get-Content $configFile -Raw
-    if ($content -match '(hook_profile|email|machine)\s*=') {
-        Write-Host ""
-        Write-Host "* Cleaning stale config keys from previous version..." -ForegroundColor Yellow
-        $content = ($content -split "`n" | Where-Object { $_ -notmatch '(hook_profile|email|machine)\s*=' }) -join "`n"
-        Set-Content $configFile $content
-        Write-Host "  + Stale keys removed" -ForegroundColor Green
-    }
+# --- Clear stale chezmoi source to force a fresh clone ---
+$chezmoiSrc = "$env:USERPROFILE\.local\share\chezmoi"
+if (Test-Path $chezmoiSrc) {
+    Write-Host ""
+    Write-Host "* Removing stale chezmoi source..." -ForegroundColor Yellow
+    Remove-Item $chezmoiSrc -Recurse -Force
 }
 
-# --- Init + apply (--force re-inits even if source exists) ---
+# --- Init + apply (fresh clone — no stale templates) ---
 Write-Host ""
 Write-Host "Applying dotfiles..." -ForegroundColor White
-chezmoi init --force --apply "git@github.com:${Repo}.git"
+chezmoi init --apply "git@github.com:${Repo}.git"
 
 # --- Bitwarden check (if API MCPs enabled) ---
 if ($enableApiMcps) {

@@ -116,17 +116,16 @@ cat > ~/.config/chezmoi/chezmoi.toml <<TOML
 TOML
 printf "  ${G}✓${R} Config saved to ~/.config/chezmoi/chezmoi.toml\n"
 
-# --- Clean stale chezmoi config keys ---
-CONFIG_FILE=~/.config/chezmoi/chezmoi.toml
-if [ -f "$CONFIG_FILE" ] && grep -qE '(hook_profile|email|machine)\s*=' "$CONFIG_FILE"; then
-  printf "\n${Y}▸${R} Cleaning stale config keys from previous version...\n"
-  sed -i.bak -E '/(hook_profile|email|machine)\s*=/d' "$CONFIG_FILE" && rm -f "${CONFIG_FILE}.bak"
-  ok "Stale keys removed"
+# --- Clear stale chezmoi source to force a fresh clone ---
+CHEZMOI_SRC="${HOME}/.local/share/chezmoi"
+if [ -d "$CHEZMOI_SRC" ]; then
+  printf "\n${Y}▸${R} Removing stale chezmoi source...\n"
+  rm -rf "$CHEZMOI_SRC"
 fi
 
-# --- Init + apply (--force re-inits even if source exists) ---
+# --- Init + apply (fresh clone — no stale templates) ---
 printf "\n${B}Applying dotfiles...${R}\n"
-chezmoi init --force --apply "git@github.com:${REPO}.git"
+chezmoi init --apply "git@github.com:${REPO}.git"
 
 # --- Bitwarden check (if API MCPs enabled) ---
 if [ "$ENABLE_API_MCPS" = "true" ]; then
