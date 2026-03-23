@@ -31,6 +31,11 @@ add_mcp context7 --transport http context7 "https://mcp.context7.com/mcp"
 add_mcp sentry --transport http sentry "https://mcp.sentry.dev/mcp"
 add_mcp figma --transport http figma "https://mcp.figma.com/mcp"
 
+# {{ if .azure_devops_org }}
+# Azure DevOps (org-scoped)
+add_mcp azure-devops azure-devops -- npx -y @azure-devops/mcp@2.5.0 # {{ .azure_devops_org }}
+# {{ end }}
+
 # {{ if .enable_api_mcps }}
 # API-key MCPs (keys from Bitwarden, versions pinned)
 add_mcp exa -e "EXA_API_KEY=# {{ (bitwarden "item" "exa-api-key").login.password }}" exa -- npx -y exa-mcp-server@3.1.9

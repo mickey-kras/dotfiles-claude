@@ -22,6 +22,11 @@ url = "https://mcp.sentry.dev/mcp"
 [mcp_servers.figma]
 type = "http"
 url = "https://mcp.figma.com/mcp"
+{{ if .azure_devops_org }}
+[mcp_servers.azure-devops]
+command = "npx"
+args = ["-y", "@azure-devops/mcp@2.5.0", "{{ .azure_devops_org }}"]
+{{ end }}
 {{ if .enable_api_mcps }}
 [mcp_servers.exa]
 command = "npx"

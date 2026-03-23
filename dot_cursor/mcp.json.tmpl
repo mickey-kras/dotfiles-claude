@@ -13,6 +13,12 @@
     "figma": {
       "url": "https://mcp.figma.com/mcp"
     }
+{{- if .azure_devops_org }},
+    "azure-devops": {
+      "command": "npx",
+      "args": ["-y", "@azure-devops/mcp@2.5.0", "{{ .azure_devops_org }}"]
+    }
+{{- end }}
 {{- if .enable_api_mcps }},
     "exa": {
       "command": "npx",

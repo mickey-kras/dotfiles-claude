@@ -19,7 +19,9 @@ irm https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/main/scripts/b
 chezmoi init --apply git@github.com:mickey-kras/dotfiles-claude.git
 ```
 
-You'll get one prompt: whether to enable API-key MCPs (exa, firecrawl, fal-ai). Say no for a zero-config setup.
+You'll get two prompts:
+1. **API-key MCPs** (exa, firecrawl, fal-ai) — requires Bitwarden CLI. Say no to skip.
+2. **Azure DevOps org** — enter your org name, or press Enter to skip.
 
 ## What gets installed
 
@@ -33,6 +35,7 @@ All versions are pinned for supply-chain safety. OAuth MCPs authenticate in the 
 | Context7 | Remote HTTP | OAuth | Up-to-date library docs and code examples |
 | Sentry | Remote HTTP | OAuth | Error tracking: stack traces, breadcrumbs, release health |
 | Figma | Remote HTTP | OAuth | Design-to-code: layouts, tokens, component variants |
+| Azure DevOps 2.5.0 | stdio (npx) | PAT/OAuth | Work items, PRs, pipelines, repos (org-scoped) |
 | Exa 3.1.9 | stdio (npx) | API key | AI-powered web search |
 | Firecrawl 3.11.0 | stdio (npx) | API key | Web scraping and crawling |
 | fal-ai 2.1.4 | stdio (npx) | API key | AI image generation |
@@ -52,7 +55,7 @@ bw login && export BW_SESSION=$(bw unlock --raw) && chezmoi apply
 
 ### Permissions & settings
 
-`~/.claude/settings.json` ships with pre-approved permissions for common dev tools (git, gh, npm, node, docker, etc.) and a deny list for dangerous operations (sudo, rm -rf /, etc.).
+`~/.claude/settings.json` ships with pre-approved permissions for common dev tools (git, gh, npm, node, docker, az, terraform, kubectl, k6, aws, gcloud, wrangler, etc.) and a deny list for dangerous operations (sudo, rm -rf /, etc.).
 
 `~/.claude/CLAUDE.md` contains lightweight global preferences (Conventional Commits, feature branches, CLI-first workflow).
 
@@ -77,7 +80,7 @@ For a quick pull-only update: `chezmoi update`
 ## File structure
 
 ```
-.chezmoi.toml.tmpl                    # Setup prompt (API MCPs toggle)
+.chezmoi.toml.tmpl                    # Setup prompts (API MCPs, Azure DevOps org)
 .chezmoiignore                        # Platform-conditional exclusions
 dot_claude/
   CLAUDE.md                           # → ~/.claude/CLAUDE.md

@@ -41,6 +41,7 @@ section "2. Checking MCP versions"
 
 PINNED_PACKAGES=(
   "@playwright/mcp:0.0.68"
+  "@azure-devops/mcp:2.5.0"
   "exa-mcp-server:3.1.9"
   "firecrawl-mcp:3.11.0"
   "fal-ai-mcp-server:2.1.4"
@@ -100,6 +101,15 @@ if command -v claude >/dev/null 2>&1; then
       fail "$mcp — not registered. Run: chezmoi apply"
     fi
   done
+
+  # Check Azure DevOps MCP if configured
+  if grep -q 'azure_devops_org = ".' ~/.config/chezmoi/chezmoi.toml 2>/dev/null; then
+    if echo "$REGISTERED" | grep -qi "azure-devops"; then
+      ok "azure-devops ${D}(org)${R}"
+    else
+      warn "azure-devops — not registered. Run: chezmoi apply"
+    fi
+  fi
 
   # Check optional MCPs if enabled
   if grep -q 'enable_api_mcps = true' ~/.config/chezmoi/chezmoi.toml 2>/dev/null; then
