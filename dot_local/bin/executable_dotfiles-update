@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Update dotfiles-claude and verify MCP health
+# Managed by chezmoi → installed at ~/.local/bin/dotfiles-update
+# Usage: dotfiles-update
+
+# --- Colors ---
+C='\033[1;36m'  G='\033[1;32m'  Y='\033[1;33m'
+D='\033[0;90m'  B='\033[1;37m'  R='\033[0m'
+RED='\033[1;31m'
+
+section() { printf "\n${B}%s${R}\n" "$1"; }
+ok()      { printf "  ${G}✓${R} %s\n" "$1"; }
+warn()    { printf "  ${Y}▸${R} %s\n" "$1"; }
+fail()    { printf "  ${RED}✗${R} %s\n" "$1"; }
+
+printf "${C}"
+printf '  __  __ _  __\n'
+printf ' |  \/  | |/ /\n'
+printf ' | |\/| |   < \n'
+printf ' |_|  |_|_|\_\\\n'
+printf "${R}\n"
+printf "${B}  dotfiles-claude update${R}\n\n"
+
+# --- 1. Pull + apply ---
+section "1. Updating dotfiles"
+if command -v chezmoi >/dev/null 2>&1; then
+  if chezmoi update --force 2>&1; then
+    ok "chezmoi update applied"
+  else
+    fail "chezmoi update failed — run 'chezmoi doctor' to diagnose"
+  fi
+else
+  fail "chezmoi not found"
+  exit 1
+fi
+
+# --- 2. Check pinned MCP versions ---
+section "2. Checking MCP versions"
+
+PINNED_PACKAGES=(
+  "@playwright/mcp:0.0.68"
+  "exa-mcp-server:3.1.9"
+  "firecrawl-mcp:3.11.0"
+  "fal-ai-mcp-server:2.1.4"
+)
+
+STALE=0
+if command -v npm >/dev/null 2>&1; then
+  for entry in "${PINNED_PACKAGES[@]}"; do
+    pkg="${entry%%:*}"
+    pinned="${entry##*:}"
+    latest=$(npm view "$pkg" version 2>/dev/null || echo "?")
+    if [ "$latest" = "?" ]; then
+      warn "$pkg — could not fetch latest version"
+    elif [ "$pinned" = "$latest" ]; then
+      ok "$pkg@$pinned ${D}(latest)${R}"
+    else
+      warn "$pkg@$pinned → ${C}$latest${R} available"
+      STALE=$((STALE + 1))
+    fi
+  done
+
+  if [ "$STALE" -gt 0 ]; then
+    printf "\n  ${Y}%d package(s) have newer versions.${R}\n" "$STALE"
+    printf "  ${D}Ask Claude to bump: \"update pinned MCP versions\"${R}\n"
+  fi
+else
+  warn "npm not found — skipping version checks"
+fi
+
+# --- 3. Security scan ---
+section "3. Security scan"
+if command -v npx >/dev/null 2>&1; then
+  if npx --yes @anthropic-ai/mcp-scan --help >/dev/null 2>&1; then
+    printf "  ${D}Running mcp-scan...${R}\n"
+    if npx --yes @anthropic-ai/mcp-scan 2>&1 | tail -5; then
+      ok "Scan complete"
+    else
+      warn "mcp-scan returned warnings — review output above"
+    fi
+  else
+    warn "mcp-scan not available — install: npx @anthropic-ai/mcp-scan"
+  fi
+else
+  warn "npx not found — skipping security scan"
+fi
+
+# --- 4. Verify MCPs ---
+section "4. Verifying MCP registration"
+if command -v claude >/dev/null 2>&1; then
+  EXPECTED=("playwright" "context7" "sentry" "figma")
+  REGISTERED=$(claude mcp list --scope user 2>/dev/null || echo "")
+
+  for mcp in "${EXPECTED[@]}"; do
+    if echo "$REGISTERED" | grep -qi "$mcp"; then
+      ok "$mcp"
+    else
+      fail "$mcp — not registered. Run: chezmoi apply"
+    fi
+  done
+
+  # Check optional MCPs if enabled
+  if grep -q 'enable_api_mcps = true' ~/.config/chezmoi/chezmoi.toml 2>/dev/null; then
+    for mcp in "exa" "firecrawl" "fal-ai"; do
+      if echo "$REGISTERED" | grep -qi "$mcp"; then
+        ok "$mcp ${D}(api)${R}"
+      else
+        warn "$mcp — not registered. Unlock Bitwarden and run: chezmoi apply"
+      fi
+    done
+  fi
+else
+  warn "claude CLI not found — skipping MCP verification"
+fi
+
+# --- 5. Verify config files ---
+section "5. Verifying config files"
+FILES=(
+  "$HOME/.claude/CLAUDE.md"
+  "$HOME/.claude/settings.json"
+  "$HOME/.claude/agents/planner.md"
+  "$HOME/.claude/agents/code-reviewer.md"
+  "$HOME/.claude/agents/tdd-guide.md"
+)
+
+for f in "${FILES[@]}"; do
+  if [ -f "$f" ]; then
+    ok "$(basename "$f")"
+  else
+    fail "$(basename "$f") — missing at $f"
+  fi
+done
+
+if [ -d "$HOME/.cursor" ] || [ -d "/Applications/Cursor.app" ]; then
+  [ -f "$HOME/.cursor/mcp.json" ] && ok "cursor/mcp.json" || fail "cursor/mcp.json — missing"
+fi
+
+if command -v codex >/dev/null 2>&1; then
+  [ -f "$HOME/.codex/config.toml" ] && ok "codex/config.toml" || fail "codex/config.toml — missing"
+fi
+
+# --- Summary ---
+printf "\n${G}✓ Update complete${R}\n"

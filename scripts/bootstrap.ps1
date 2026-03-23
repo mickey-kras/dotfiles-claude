@@ -86,4 +86,4 @@ Write-Host "  Get-Content ~/.cursor/mcp.json   # Cursor MCPs" -ForegroundColor C
 Write-Host "  Get-Content ~/.codex/config.toml # Codex config" -ForegroundColor Cyan
 Write-Host "  ls ~/.claude/agents/       # Agents" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Update later: chezmoi update" -ForegroundColor DarkGray
+Write-Host "Update later: dotfiles-update" -ForegroundColor DarkGray

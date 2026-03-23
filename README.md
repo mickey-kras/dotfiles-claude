@@ -67,8 +67,12 @@ bw login && export BW_SESSION=$(bw unlock --raw) && chezmoi apply
 ## Updating
 
 ```bash
-chezmoi update    # Pull + apply on any machine
+dotfiles-update   # Pull, apply, check versions, verify MCPs, security scan
 ```
+
+Installed at `~/.local/bin/dotfiles-update` by chezmoi. Make sure `~/.local/bin` is in your PATH.
+
+For a quick pull-only update: `chezmoi update`
 
 ## File structure
 
@@ -87,6 +91,9 @@ dot_cursor/
   rules/global.mdc                    # → ~/.cursor/rules/global.mdc
 dot_codex/
   config.toml.tmpl                    # → ~/.codex/config.toml
+dot_local/
+  bin/
+    executable_dotfiles-update        # → ~/.local/bin/dotfiles-update
 run_onchange_after_install-claude-mcps.sh.tmpl   # Unix MCP registration
 run_onchange_after_install-claude-mcps.ps1.tmpl  # Windows MCP registration
 scripts/
