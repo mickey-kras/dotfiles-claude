@@ -106,12 +106,12 @@ for choice in $CHOICES; do
   esac
 done
 
-# --- Write chezmoi config ---
+# --- Write chezmoi config (API MCPs disabled for initial apply) ---
 printf "\n${D}Writing chezmoi config...${R}\n"
 mkdir -p ~/.config/chezmoi
 cat > ~/.config/chezmoi/chezmoi.toml <<TOML
 [data]
-  enable_api_mcps = ${ENABLE_API_MCPS}
+  enable_api_mcps = false
   azure_devops_org = "${AZURE_DEVOPS_ORG}"
 TOML
 printf "  ${G}✓${R} Config saved to ~/.config/chezmoi/chezmoi.toml\n"
@@ -123,7 +123,7 @@ if [ -d "$CHEZMOI_SRC" ]; then
   rm -rf "$CHEZMOI_SRC"
 fi
 
-# --- Init + apply (fresh clone — no stale templates) ---
+# --- Init + apply (fresh clone — API MCPs deferred until Bitwarden is ready) ---
 printf "\n${B}Applying dotfiles...${R}\n"
 chezmoi init --apply "git@github.com:${REPO}.git"
 
@@ -204,6 +204,12 @@ if [ "$ENABLE_API_MCPS" = "true" ]; then
         bw sync >/dev/null 2>&1
       fi
 
+      # Enable API MCPs in config and re-apply
+      cat > ~/.config/chezmoi/chezmoi.toml <<TOML
+[data]
+  enable_api_mcps = true
+  azure_devops_org = "${AZURE_DEVOPS_ORG}"
+TOML
       printf "\n${B}Re-applying dotfiles with API keys...${R}\n"
       chezmoi apply
       printf "  ${G}✓${R} API MCPs configured\n"

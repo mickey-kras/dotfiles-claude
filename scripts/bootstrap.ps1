@@ -100,7 +100,7 @@ $configDir = "$env:USERPROFILE\.config\chezmoi"
 New-Item -ItemType Directory -Path $configDir -Force | Out-Null
 @"
 [data]
-  enable_api_mcps = $($enableApiMcps.ToString().ToLower())
+  enable_api_mcps = false
   azure_devops_org = "$azureDevOpsOrg"
 "@ | Set-Content "$configDir\chezmoi.toml"
 Write-Host "  + Config saved" -ForegroundColor Green
@@ -195,6 +195,13 @@ if ($enableApiMcps) {
                 }
                 bw sync 2>$null | Out-Null
             }
+
+            # Enable API MCPs in config and re-apply
+            @"
+[data]
+  enable_api_mcps = true
+  azure_devops_org = "$azureDevOpsOrg"
+"@ | Set-Content "$configDir\chezmoi.toml"
 
             Write-Host ""
             Write-Host "Re-applying dotfiles with API keys..." -ForegroundColor White
