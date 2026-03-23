@@ -16,12 +16,13 @@ R='\033[0m'     # reset
 
 # --- Logo ---
 printf "${C}"
-printf '  __  __ _  __\n'
-printf ' |  \/  | |/ /\n'
-printf ' | |\/| |   < \n'
-printf ' |_|  |_|_|\_\\\n'
+printf '  ____    _    ____ _____ \n'
+printf ' |  _ \\  / \\  / ___|_   _|\n'
+printf ' | |_) |/ _ \\| |     | |  \n'
+printf ' |  __// ___ \\ |___  | |  \n'
+printf ' |_|  /_/   \\_\\____| |_|  \n'
 printf "${R}\n"
-printf "${B}  AI Toolchain Bootstrap${R}\n"
+printf "${B}  People & AI Conduct Terms${R}\n"
 printf "${D}  Claude Code · Cursor · Codex${R}\n\n"
 
 # --- Install chezmoi if missing ---
@@ -115,9 +116,17 @@ cat > ~/.config/chezmoi/chezmoi.toml <<TOML
 TOML
 printf "  ${G}✓${R} Config saved to ~/.config/chezmoi/chezmoi.toml\n"
 
-# --- Init + apply (no prompts — config already written) ---
+# --- Clean stale chezmoi config keys ---
+CONFIG_FILE=~/.config/chezmoi/chezmoi.toml
+if [ -f "$CONFIG_FILE" ] && grep -qE '(hook_profile|email|machine)\s*=' "$CONFIG_FILE"; then
+  printf "\n${Y}▸${R} Cleaning stale config keys from previous version...\n"
+  sed -i.bak -E '/(hook_profile|email|machine)\s*=/d' "$CONFIG_FILE" && rm -f "${CONFIG_FILE}.bak"
+  ok "Stale keys removed"
+fi
+
+# --- Init + apply (--force re-inits even if source exists) ---
 printf "\n${B}Applying dotfiles...${R}\n"
-chezmoi init --apply "git@github.com:${REPO}.git"
+chezmoi init --force --apply "git@github.com:${REPO}.git"
 
 # --- Bitwarden check (if API MCPs enabled) ---
 if [ "$ENABLE_API_MCPS" = "true" ]; then
