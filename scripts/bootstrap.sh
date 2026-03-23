@@ -2,16 +2,31 @@
 set -euo pipefail
 
 # One-command bootstrap for macOS / Linux / WSL
-# Usage: curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/main/scripts/bootstrap.sh | bash
+# Usage: bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/main/scripts/bootstrap.sh)
 
 REPO="mickey-kras/dotfiles-claude"
 
-echo "=== AI Toolchain Bootstrap ==="
-echo ""
+# --- Colors ---
+C='\033[1;36m'  # cyan
+G='\033[1;32m'  # green
+Y='\033[1;33m'  # yellow
+D='\033[0;90m'  # dim
+B='\033[1;37m'  # bold white
+R='\033[0m'     # reset
+
+# --- Logo ---
+printf "${C}"
+printf '  ___  ___ _  __\n'
+printf ' |  \\/  || |/ /\n'
+printf ' | .  . || |  \\\n'
+printf ' |_|\\/|_||_|\\_\\\n'
+printf "${R}\n"
+printf "${B}  AI Toolchain Bootstrap${R}\n"
+printf "${D}  Claude Code · Cursor · Codex${R}\n\n"
 
 # --- Install chezmoi if missing ---
 if ! command -v chezmoi >/dev/null 2>&1; then
-  echo "Installing chezmoi..."
+  printf "${Y}▸${R} Installing chezmoi...\n"
   if [[ "$(uname -s)" == "Darwin" ]]; then
     brew install chezmoi
   elif command -v apt-get >/dev/null 2>&1; then
@@ -24,45 +39,44 @@ if ! command -v chezmoi >/dev/null 2>&1; then
     sh -c "$(curl -fsLS get.chezmoi.io)"
     export PATH="$HOME/bin:$PATH"
   fi
-  echo "  chezmoi installed"
+  printf "  ${G}✓${R} chezmoi installed\n"
+else
+  printf "  ${G}✓${R} chezmoi $(chezmoi --version 2>/dev/null | head -c 30)\n"
 fi
 
 # --- Check dependencies ---
 MISSING=()
 command -v git  >/dev/null 2>&1 || MISSING+=("git")
-command -v node >/dev/null 2>&1 || MISSING+=("node/nodejs")
+command -v node >/dev/null 2>&1 || MISSING+=("node")
 command -v npx  >/dev/null 2>&1 || MISSING+=("npx")
 
 if [ ${#MISSING[@]} -gt 0 ]; then
-  echo ""
-  echo "Missing dependencies: ${MISSING[*]}"
-  echo "Some MCPs require node/npx. Install them for full functionality."
-  echo ""
+  printf "\n${Y}⚠${R}  Missing: ${MISSING[*]}\n"
+  printf "   Some MCPs and hooks require node/npx.\n\n"
 fi
 
 # --- Check for AI tools ---
-echo "Detected AI tools:"
-command -v claude >/dev/null 2>&1 && echo "  + Claude Code" || echo "  - Claude Code (not found)"
-[ -d "$HOME/.cursor" ] || [ -d "/Applications/Cursor.app" ] && echo "  + Cursor" || echo "  - Cursor (not found)"
-command -v codex >/dev/null 2>&1 && echo "  + Codex" || echo "  - Codex (not found)"
-echo ""
+printf "\n${B}Detected tools:${R}\n"
+command -v claude >/dev/null 2>&1 && printf "  ${G}✓${R} Claude Code\n" || printf "  ${D}✗ Claude Code (not found)${R}\n"
+{ [ -d "$HOME/.cursor" ] || [ -d "/Applications/Cursor.app" ]; } && printf "  ${G}✓${R} Cursor\n" || printf "  ${D}✗ Cursor (not found)${R}\n"
+command -v codex >/dev/null 2>&1 && printf "  ${G}✓${R} Codex\n" || printf "  ${D}✗ Codex (not found)${R}\n"
+printf "\n"
 
 # --- Init + apply ---
-echo "Running chezmoi init + apply..."
-echo "You'll be prompted for your email and machine type."
-echo "No API keys needed — OAuth MCPs authorize in the browser on first use."
-echo ""
+printf "${B}Running chezmoi init + apply...${R}\n"
+printf "${D}You'll be prompted for: email, machine type, hook profile, API MCPs.${R}\n"
+printf "${D}No API keys needed for core setup — OAuth MCPs auth in browser on first use.${R}\n\n"
 chezmoi init --apply "git@github.com:${REPO}.git"
 
-echo ""
-echo "=== Done! ==="
-echo ""
-echo "Your AI tools are configured. OAuth MCPs (Context7, GitHub) will"
-echo "prompt you to authorize in the browser the first time you use them."
-echo ""
-echo "Verify with:"
-echo "  claude mcp list          # Claude Code MCPs"
-echo "  cat ~/.cursor/mcp.json   # Cursor MCPs"
-echo "  cat ~/.codex/config.toml # Codex MCPs"
-echo ""
-echo "To update later:  chezmoi update"
+# --- Done ---
+printf "\n${G}✓ Done!${R}\n\n"
+printf "  OAuth MCPs (Context7, GitHub, Vercel) will prompt in\n"
+printf "  your browser the first time you use them.\n\n"
+printf "${B}Verify:${R}\n"
+printf "  ${C}claude mcp list${R}            # Claude Code MCPs\n"
+printf "  ${C}cat ~/.cursor/mcp.json${R}     # Cursor MCPs\n"
+printf "  ${C}cat ~/.codex/config.toml${R}   # Codex config\n"
+printf "  ${C}ls ~/.claude/rules/${R}        # Rules\n"
+printf "  ${C}ls ~/.claude/agents/${R}       # Agents\n"
+printf "  ${C}ls ~/.claude/hooks/${R}        # Hooks\n\n"
+printf "${D}Update later: chezmoi update${R}\n"

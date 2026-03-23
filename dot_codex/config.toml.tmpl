@@ -1,7 +1,8 @@
 # Codex global configuration
 # Managed by chezmoi — edit the template at ~/dotfiles-claude/dot_codex/config.toml.tmpl
 
-model = "o4-mini"
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
 
 # Global instructions for all Codex sessions
 instructions = """
@@ -25,3 +26,34 @@ url = "https://mcp.context7.com/mcp"
 [mcp_servers.github]
 type = "http"
 url = "https://api.githubcopilot.com/mcp"
+
+[mcp_servers.cloudflare-docs]
+type = "http"
+url = "https://docs.mcp.cloudflare.com/mcp"
+
+[mcp_servers.vercel]
+type = "http"
+url = "https://mcp.vercel.com"
+
+[mcp_servers.magic-ui]
+command = "npx"
+args = ["-y", "@magicuidesign/mcp@latest"]
+{{ if .enable_api_mcps }}
+[mcp_servers.exa]
+command = "npx"
+args = ["-y", "exa-mcp-server"]
+[mcp_servers.exa.env]
+EXA_API_KEY = "{{ (bitwarden "item" "exa-api-key").login.password }}"
+
+[mcp_servers.firecrawl]
+command = "npx"
+args = ["-y", "firecrawl-mcp"]
+[mcp_servers.firecrawl.env]
+FIRECRAWL_API_KEY = "{{ (bitwarden "item" "firecrawl-api-key").login.password }}"
+
+[mcp_servers.fal-ai]
+command = "npx"
+args = ["-y", "fal-ai-mcp-server"]
+[mcp_servers.fal-ai.env]
+FAL_KEY = "{{ (bitwarden "item" "fal-api-key").login.password }}"
+{{ end }}

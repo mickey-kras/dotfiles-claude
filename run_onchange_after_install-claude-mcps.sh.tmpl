@@ -29,10 +29,20 @@ add_mcp() {
 # Local MCPs (stdio, no auth)
 add_mcp sequential-thinking sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
 add_mcp playwright playwright -- npx -y @playwright/mcp@latest
+add_mcp magic-ui magic-ui -- npx -y @magicuidesign/mcp@latest
 
 # Remote MCPs (HTTP, OAuth — browser auth on first use)
 add_mcp context7 --transport http context7 "https://mcp.context7.com/mcp"
 add_mcp github --transport http github "https://api.githubcopilot.com/mcp"
+add_mcp cloudflare-docs --transport http cloudflare-docs "https://docs.mcp.cloudflare.com/mcp"
+add_mcp vercel --transport http vercel "https://mcp.vercel.com"
+
+# {{ if .enable_api_mcps }}
+# API-key MCPs (keys from Bitwarden)
+add_mcp exa -e "EXA_API_KEY=# {{ (bitwarden "item" "exa-api-key").login.password }}" exa -- npx -y exa-mcp-server
+add_mcp firecrawl -e "FIRECRAWL_API_KEY=# {{ (bitwarden "item" "firecrawl-api-key").login.password }}" firecrawl -- npx -y firecrawl-mcp
+add_mcp fal-ai -e "FAL_KEY=# {{ (bitwarden "item" "fal-api-key").login.password }}" fal-ai -- npx -y fal-ai-mcp-server
+# {{ end }}
 
 echo ""
 if [ "$FAILED" -eq 0 ]; then
