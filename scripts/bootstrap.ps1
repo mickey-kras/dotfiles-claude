@@ -129,7 +129,12 @@ Remove-Item "$configDir\chezmoistate" -ErrorAction SilentlyContinue
 # --- Init + apply (fresh clone — no stale templates) ---
 Write-Host ""
 Write-Host "Applying dotfiles..." -ForegroundColor White
-chezmoi init --apply "git@github.com:${Repo}.git"
+try {
+    chezmoi init --apply "git@github.com:${Repo}.git"
+} catch {
+    Write-Host "  * SSH clone failed - falling back to HTTPS" -ForegroundColor Yellow
+    chezmoi init --apply "https://github.com/${Repo}.git"
+}
 
 # --- Consolidate source: ~/dotfiles-claude + junction ---
 if ((Test-Path $chezmoiSrc) -and -not ((Get-Item $chezmoiSrc).Attributes -band [IO.FileAttributes]::ReparsePoint)) {

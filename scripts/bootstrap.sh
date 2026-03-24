@@ -128,7 +128,10 @@ rm -f "${HOME}/.config/chezmoi/chezmoistate"
 
 # --- Init + apply (fresh clone — API MCPs deferred until Bitwarden is ready) ---
 printf "\n${B}Applying dotfiles...${R}\n"
-chezmoi init --apply "git@github.com:${REPO}.git"
+if ! chezmoi init --apply "git@github.com:${REPO}.git" 2>/dev/null; then
+  warn "SSH clone failed — falling back to HTTPS"
+  chezmoi init --apply "https://github.com/${REPO}.git"
+fi
 
 # --- Consolidate source: ~/dotfiles-claude + symlink ---
 if [ -d "$CHEZMOI_SRC" ] && [ ! -L "$CHEZMOI_SRC" ]; then

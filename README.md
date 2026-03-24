@@ -4,19 +4,24 @@ AI toolchain config synced across machines with [chezmoi](https://chezmoi.io). O
 
 ## Quick start
 
-**macOS / Linux / WSL:**
+**macOS / Linux / WSL / Windows (Git Bash):**
 ```bash
 bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/main/scripts/bootstrap.sh)
-```
-
-**Windows (PowerShell):**
-```powershell
-irm https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/main/scripts/bootstrap.ps1 -OutFile bootstrap.ps1; .\bootstrap.ps1
 ```
 
 **Already have chezmoi?**
 ```bash
 chezmoi init --apply git@github.com:mickey-kras/dotfiles-claude.git
+```
+
+**Can't use SSH?** The repo is public — HTTPS works without auth:
+```bash
+chezmoi init --apply https://github.com/mickey-kras/dotfiles-claude.git
+```
+
+**No git/SSH access at all?** Download the [zip from GitHub](https://github.com/mickey-kras/dotfiles-claude/archive/refs/heads/main.zip), extract to `~/dotfiles-claude`, then:
+```bash
+chezmoi init --apply --source ~/dotfiles-claude
 ```
 
 You'll get two prompts:
