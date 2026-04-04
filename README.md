@@ -14,11 +14,6 @@ bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles/main/scri
 chezmoi init --apply git@github.com:mickey-kras/dotfiles.git
 ```
 
-If the GitHub repo has not been renamed yet, use the current slug instead:
-```bash
-chezmoi init --apply git@github.com:mickey-kras/dotfiles-claude.git
-```
-
 **Can't use SSH?** The repo is public - HTTPS works without auth:
 ```bash
 chezmoi init --apply https://github.com/mickey-kras/dotfiles.git

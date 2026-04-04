@@ -4,8 +4,7 @@ set -euo pipefail
 # One-command bootstrap for macOS / Linux / WSL
 # Usage: bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles/main/scripts/bootstrap.sh)
 
-PRIMARY_REPO="mickey-kras/dotfiles"
-FALLBACK_REPO="mickey-kras/dotfiles-claude"
+REPO="mickey-kras/dotfiles"
 
 # --- Colors ---
 C='\033[1;36m'  # cyan
@@ -161,13 +160,9 @@ rm -f "${HOME}/.config/chezmoi/chezmoistate"
 
 # --- Init + apply (fresh clone - API MCPs deferred until Bitwarden is ready) ---
 printf "\n${B}Applying dotfiles...${R}\n"
-if ! chezmoi init --apply "git@github.com:${PRIMARY_REPO}.git" 2>/dev/null; then
-  if ! chezmoi init --apply "https://github.com/${PRIMARY_REPO}.git" 2>/dev/null; then
-    printf "  ${Y}>${R} Primary repo unavailable - falling back to current slug\n"
-    if ! chezmoi init --apply "git@github.com:${FALLBACK_REPO}.git" 2>/dev/null; then
-      chezmoi init --apply "https://github.com/${FALLBACK_REPO}.git"
-    fi
-  fi
+if ! chezmoi init --apply "git@github.com:${REPO}.git" 2>/dev/null; then
+  printf "  ${Y}>${R} SSH clone failed - falling back to HTTPS\n"
+  chezmoi init --apply "https://github.com/${REPO}.git"
 fi
 
 # --- Consolidate source: ~/dotfiles + symlink ---

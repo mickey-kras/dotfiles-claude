@@ -2,8 +2,7 @@
 # Usage: irm https://raw.githubusercontent.com/mickey-kras/dotfiles/main/scripts/bootstrap.ps1 -OutFile bootstrap.ps1; .\bootstrap.ps1
 
 $ErrorActionPreference = "Stop"
-$PrimaryRepo = "mickey-kras/dotfiles"
-$FallbackRepo = "mickey-kras/dotfiles-claude"
+$Repo = "mickey-kras/dotfiles"
 
 # --- Logo ---
 Write-Host ""
@@ -168,18 +167,10 @@ Remove-Item "$configDir\chezmoistate" -ErrorAction SilentlyContinue
 Write-Host ""
 Write-Host "Applying dotfiles..." -ForegroundColor White
 try {
-    chezmoi init --apply "git@github.com:${PrimaryRepo}.git"
+    chezmoi init --apply "git@github.com:${Repo}.git"
 } catch {
-    try {
-        chezmoi init --apply "https://github.com/${PrimaryRepo}.git"
-    } catch {
-        Write-Host "  * Primary repo unavailable - falling back to current slug" -ForegroundColor Yellow
-        try {
-            chezmoi init --apply "git@github.com:${FallbackRepo}.git"
-        } catch {
-            chezmoi init --apply "https://github.com/${FallbackRepo}.git"
-        }
-    }
+    Write-Host "  * SSH clone failed - falling back to HTTPS" -ForegroundColor Yellow
+    chezmoi init --apply "https://github.com/${Repo}.git"
 }
 
 # --- Consolidate source: ~/dotfiles + junction ---
