@@ -9,7 +9,7 @@ $ErrorActionPreference = "Continue"
 $failed = 0
 
 # ============================================================
-# 1. Claude Code CLI — via `claude mcp add`
+# 1. Claude Code CLI - via `claude mcp add`
 # ============================================================
 
 if (Get-Command claude -ErrorAction SilentlyContinue) {
@@ -49,7 +49,7 @@ if (Get-Command claude -ErrorAction SilentlyContinue) {
 }
 
 # ============================================================
-# 2. Claude Desktop App — merge mcpServers into existing config
+# 2. Claude Desktop App - merge mcpServers into existing config
 # ============================================================
 
 $claudeDesktopConfig = "$env:APPDATA\Claude\claude_desktop_config.json"

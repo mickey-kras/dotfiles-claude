@@ -14,7 +14,7 @@ bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/ma
 chezmoi init --apply git@github.com:mickey-kras/dotfiles-claude.git
 ```
 
-**Can't use SSH?** The repo is public — HTTPS works without auth:
+**Can't use SSH?** The repo is public - HTTPS works without auth:
 ```bash
 chezmoi init --apply https://github.com/mickey-kras/dotfiles-claude.git
 ```
@@ -25,8 +25,8 @@ chezmoi init --apply --source ~/dotfiles-claude
 ```
 
 You'll get two prompts:
-1. **API-key MCPs** (exa, firecrawl, fal-ai) — requires Bitwarden CLI. Say no to skip.
-2. **Azure DevOps org** — enter your org name, or press Enter to skip.
+1. **API-key MCPs** (exa, firecrawl, fal-ai) - requires Bitwarden CLI. Say no to skip.
+2. **Azure DevOps org** - enter your org name, or press Enter to skip.
 
 ## What gets installed
 
@@ -60,11 +60,13 @@ bw login && export BW_SESSION=$(bw unlock --raw) && chezmoi apply
 
 ### Permissions & settings
 
-`~/.claude/settings.json` ships with pre-approved permissions for common dev tools (git, gh, npm, node, docker, az, terraform, kubectl, k6, aws, gcloud, wrangler, etc.) and a deny list for dangerous operations (sudo, rm -rf /, etc.).
+`~/.claude/settings.json` ships with pre-approved permissions for common dev tools (git, gh, npm, node, docker, az, terraform, kubectl, k6, aws, gcloud, wrangler, etc.), a deny list for dangerous operations (sudo, rm -rf /, etc.), and `model: "opus"` so Claude Code uses the current Opus line by default.
 
 `~/.claude/CLAUDE.md` contains lightweight global preferences (Conventional Commits, feature branches, CLI-first workflow).
 
 `~/.codex/AGENTS.md` mirrors those same global preferences for Codex, so both tools behave consistently across machines.
+
+Global Git hooks are also installed at `~/.config/git/hooks` and enabled through `core.hooksPath`, so the same charset and no-AI-attribution rules are enforced before commit and before push across all local repositories.
 
 ## What gets configured
 
@@ -83,7 +85,7 @@ dotfiles-update   # Pull, apply, check versions, verify MCPs, security scan
 
 Installed at `~/.local/bin/dotfiles-update` by chezmoi. Make sure `~/.local/bin` is in your PATH.
 
-On Windows, a `.cmd` wrapper is installed alongside so `dotfiles-update` works from PowerShell and cmd. Requires Git Bash (`bash` in PATH) — included with [Git for Windows](https://gitforwindows.org).
+On Windows, a `.cmd` wrapper is installed alongside so `dotfiles-update` works from PowerShell and cmd. Requires Git Bash (`bash` in PATH) - included with [Git for Windows](https://gitforwindows.org).
 
 For a quick pull-only update: `chezmoi update`
 
@@ -93,22 +95,30 @@ For a quick pull-only update: `chezmoi update`
 .chezmoi.toml.tmpl                    # Setup prompts (API MCPs, Azure DevOps org)
 .chezmoiignore                        # Platform-conditional exclusions
 dot_claude/
-  CLAUDE.md                           # → ~/.claude/CLAUDE.md
-  settings.json                       # → ~/.claude/settings.json
+  CLAUDE.md                           # -> ~/.claude/CLAUDE.md
+  settings.json                       # -> ~/.claude/settings.json
   agents/
     planner.md                        # Planning agent
     code-reviewer.md                  # Code review agent
     tdd-guide.md                      # TDD coaching agent
 dot_cursor/
-  mcp.json.tmpl                       # → ~/.cursor/mcp.json
-  rules/global.mdc                    # → ~/.cursor/rules/global.mdc
+  mcp.json.tmpl                       # -> ~/.cursor/mcp.json
+  rules/global.mdc                    # -> ~/.cursor/rules/global.mdc
 dot_codex/
-  config.toml.tmpl                    # → ~/.codex/config.toml
-  AGENTS.md                           # → ~/.codex/AGENTS.md
+  config.toml.tmpl                    # -> ~/.codex/config.toml
+  AGENTS.md                           # -> ~/.codex/AGENTS.md
+dot_config/
+  git/hooks/
+    _misha_git_policy.py              # Shared policy checker
+    pre-commit                        # Staged content checks
+    commit-msg                        # Commit message checks
+    pre-push                          # Outgoing commit history checks
 dot_local/
   bin/
-    executable_dotfiles-update        # → ~/.local/bin/dotfiles-update
-    executable_dotfiles-update.cmd    # → ~/.local/bin/dotfiles-update.cmd (Windows only)
+    executable_dotfiles-update        # -> ~/.local/bin/dotfiles-update
+    executable_dotfiles-update.cmd    # -> ~/.local/bin/dotfiles-update.cmd (Windows only)
+run_onchange_after_configure-global-git-hooks.sh.tmpl   # Unix global Git hook setup
+run_onchange_after_configure-global-git-hooks.ps1.tmpl  # Windows global Git hook setup
 run_onchange_after_install-claude-mcps.sh.tmpl   # Unix MCP registration
 run_onchange_after_install-claude-mcps.ps1.tmpl  # Windows MCP registration
 scripts/
@@ -118,10 +128,10 @@ scripts/
 
 ## Security
 
-- **Pinned versions** — All stdio MCPs use exact version numbers to prevent supply-chain attacks via malicious updates.
-- **No secrets in repo** — API keys are fetched from Bitwarden at `chezmoi apply` time.
-- **OAuth MCPs** (Context7, Sentry, Figma) authenticate via browser — no tokens stored locally.
-- **Periodic audit** — Run `npx @anthropic-ai/mcp-scan` to scan installed MCPs for tool poisoning.
+- **Pinned versions** - All stdio MCPs use exact version numbers to prevent supply-chain attacks via malicious updates.
+- **No secrets in repo** - API keys are fetched from Bitwarden at `chezmoi apply` time.
+- **OAuth MCPs** (Context7, Sentry, Figma) authenticate via browser - no tokens stored locally.
+- **Periodic audit** - Run `npx @anthropic-ai/mcp-scan` to scan installed MCPs for tool poisoning.
 
 ## Dependencies
 

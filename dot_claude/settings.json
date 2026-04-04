@@ -52,5 +52,6 @@
   },
   "env": {
     "EDITOR": "code --wait"
-  }
+  },
+  "model": "opus"
 }

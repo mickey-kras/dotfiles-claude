@@ -24,11 +24,11 @@ printf ' |  __// ___ \\ |___  | |  \n'
 printf ' |_|  /_/   \\_\\____| |_|  \n'
 printf "${R}\n"
 printf "${B}  People & AI Conduct Terms${R}\n"
-printf "${D}  Claude Code · Cursor · Codex${R}\n\n"
+printf "${D}  Claude Code - Cursor - Codex${R}\n\n"
 
 # --- Install chezmoi if missing ---
 if ! command -v chezmoi >/dev/null 2>&1; then
-  printf "${Y}▸${R} Installing chezmoi...\n"
+  printf "${Y}>${R} Installing chezmoi...\n"
   if [[ "$(uname -s)" == "Darwin" ]]; then
     brew install chezmoi
   elif command -v apt-get >/dev/null 2>&1; then
@@ -41,9 +41,9 @@ if ! command -v chezmoi >/dev/null 2>&1; then
     sh -c "$(curl -fsLS get.chezmoi.io)"
     export PATH="$HOME/bin:$PATH"
   fi
-  printf "  ${G}✓${R} chezmoi installed\n"
+  printf "  ${G}+${R} chezmoi installed\n"
 else
-  printf "  ${G}✓${R} chezmoi $(chezmoi --version 2>/dev/null | head -c 30)\n"
+  printf "  ${G}+${R} chezmoi $(chezmoi --version 2>/dev/null | head -c 30)\n"
 fi
 
 # --- Check dependencies ---
@@ -53,28 +53,28 @@ command -v node >/dev/null 2>&1 || MISSING+=("node")
 command -v npx  >/dev/null 2>&1 || MISSING+=("npx")
 
 if [ ${#MISSING[@]} -gt 0 ]; then
-  printf "\n${Y}⚠${R}  Missing: ${MISSING[*]}\n"
+  printf "\n${Y}!${R}  Missing: ${MISSING[*]}\n"
   printf "   MCPs require node/npx.\n\n"
 fi
 
 # --- Detect AI tools ---
 printf "\n${B}Detected tools:${R}\n"
-command -v claude >/dev/null 2>&1 && printf "  ${G}✓${R} Claude Code\n" || printf "  ${D}✗ Claude Code (not found)${R}\n"
-{ [ -d "$HOME/.cursor" ] || [ -d "/Applications/Cursor.app" ]; } && printf "  ${G}✓${R} Cursor\n" || printf "  ${D}✗ Cursor (not found)${R}\n"
-command -v codex >/dev/null 2>&1 && printf "  ${G}✓${R} Codex\n" || printf "  ${D}✗ Codex (not found)${R}\n"
+command -v claude >/dev/null 2>&1 && printf "  ${G}+${R} Claude Code\n" || printf "  ${D}x Claude Code (not found)${R}\n"
+{ [ -d "$HOME/.cursor" ] || [ -d "/Applications/Cursor.app" ]; } && printf "  ${G}+${R} Cursor\n" || printf "  ${D}x Cursor (not found)${R}\n"
+command -v codex >/dev/null 2>&1 && printf "  ${G}+${R} Codex\n" || printf "  ${D}x Codex (not found)${R}\n"
 printf "\n"
 
 # --- MCP Selection ---
 printf "${B}MCP Configuration${R}\n\n"
 
-printf "  ${G}✓${R} Playwright        ${D}— Browser automation, E2E testing${R}\n"
-printf "  ${G}✓${R} Context7          ${D}— Up-to-date library docs${R}\n"
-printf "  ${G}✓${R} Sentry            ${D}— Error tracking, stack traces (OAuth)${R}\n"
-printf "  ${G}✓${R} Figma             ${D}— Design-to-code (OAuth)${R}\n"
+printf "  ${G}+${R} Playwright        ${D}- Browser automation, E2E testing${R}\n"
+printf "  ${G}+${R} Context7          ${D}- Up-to-date library docs${R}\n"
+printf "  ${G}+${R} Sentry            ${D}- Error tracking, stack traces (OAuth)${R}\n"
+printf "  ${G}+${R} Figma             ${D}- Design-to-code (OAuth)${R}\n"
 printf "\n"
 printf "  ${B}Optional:${R}\n"
-printf "  ${C}[1]${R} Azure DevOps     ${D}— Work items, PRs, pipelines${R}\n"
-printf "  ${C}[2]${R} API MCPs         ${D}— Exa, Firecrawl, fal-ai (requires Bitwarden)${R}\n"
+printf "  ${C}[1]${R} Azure DevOps     ${D}- Work items, PRs, pipelines${R}\n"
+printf "  ${C}[2]${R} API MCPs         ${D}- Exa, Firecrawl, fal-ai (requires Bitwarden)${R}\n"
 printf "\n"
 
 ENABLE_AZURE_DEVOPS=false
@@ -91,18 +91,18 @@ for choice in $CHOICES; do
       printf "\n${B}Azure DevOps org name: ${R}"
       read -r AZURE_DEVOPS_ORG
       if [ -z "$AZURE_DEVOPS_ORG" ]; then
-        printf "  ${Y}▸${R} No org name — skipping Azure DevOps\n"
+        printf "  ${Y}>${R} No org name - skipping Azure DevOps\n"
         ENABLE_AZURE_DEVOPS=false
       else
-        printf "  ${G}✓${R} Azure DevOps org: ${C}${AZURE_DEVOPS_ORG}${R}\n"
+        printf "  ${G}+${R} Azure DevOps org: ${C}${AZURE_DEVOPS_ORG}${R}\n"
       fi
       ;;
     2)
       ENABLE_API_MCPS=true
-      printf "  ${G}✓${R} API MCPs enabled\n"
+      printf "  ${G}+${R} API MCPs enabled\n"
       ;;
     *)
-      printf "  ${Y}▸${R} Unknown option: $choice (skipped)\n"
+      printf "  ${Y}>${R} Unknown option: $choice (skipped)\n"
       ;;
   esac
 done
@@ -115,7 +115,7 @@ cat > ~/.config/chezmoi/chezmoi.toml <<TOML
   enable_api_mcps = false
   azure_devops_org = "${AZURE_DEVOPS_ORG}"
 TOML
-printf "  ${G}✓${R} Config saved to ~/.config/chezmoi/chezmoi.toml\n"
+printf "  ${G}+${R} Config saved to ~/.config/chezmoi/chezmoi.toml\n"
 
 # --- Clear stale chezmoi state and source for a clean init ---
 CHEZMOI_SRC="${HOME}/.local/share/chezmoi"
@@ -127,23 +127,23 @@ DOTFILES_DIR="${HOME}/dotfiles-claude"
 rm -f "${HOME}/.config/chezmoi/chezmoistate.boltdb"
 rm -f "${HOME}/.config/chezmoi/chezmoistate"
 
-# --- Init + apply (fresh clone — API MCPs deferred until Bitwarden is ready) ---
+# --- Init + apply (fresh clone - API MCPs deferred until Bitwarden is ready) ---
 printf "\n${B}Applying dotfiles...${R}\n"
 if ! chezmoi init --apply "git@github.com:${REPO}.git" 2>/dev/null; then
-  printf "  ${Y}▸${R} SSH clone failed — falling back to HTTPS\n"
+  printf "  ${Y}>${R} SSH clone failed - falling back to HTTPS\n"
   chezmoi init --apply "https://github.com/${REPO}.git"
 fi
 
 # --- Consolidate source: ~/dotfiles-claude + symlink ---
 if [ -d "$CHEZMOI_SRC" ] && [ ! -L "$CHEZMOI_SRC" ]; then
   if [ -d "$DOTFILES_DIR" ]; then
-    # User already has a working copy — point chezmoi at it
+    # User already has a working copy - point chezmoi at it
     rm -rf "$CHEZMOI_SRC"
   else
     mv "$CHEZMOI_SRC" "$DOTFILES_DIR"
   fi
   ln -s "$DOTFILES_DIR" "$CHEZMOI_SRC"
-  printf "  ${G}✓${R} Source linked: %s → %s\n" "$CHEZMOI_SRC" "$DOTFILES_DIR"
+  printf "  ${G}+${R} Source linked: %s -> %s\n" "$CHEZMOI_SRC" "$DOTFILES_DIR"
 fi
 
 # --- Bitwarden setup (if API MCPs enabled) ---
@@ -160,7 +160,7 @@ if [ "$ENABLE_API_MCPS" = "true" ]; then
       elif command -v apt-get >/dev/null 2>&1; then
         sudo snap install bw
       else
-        printf "  ${RED}✗${R} Could not detect a supported package manager.\n"
+        printf "  ${RED}x${R} Could not detect a supported package manager.\n"
         printf "  Install manually: ${C}https://bitwarden.com/help/cli/${R}\n\n"
       fi
     fi
@@ -170,13 +170,13 @@ if [ "$ENABLE_API_MCPS" = "true" ]; then
     printf "\n${B}Bitwarden login & unlock${R}\n"
     BW_STATUS=$(bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
     if [ "$BW_STATUS" = "unauthenticated" ]; then
-      printf "  ${Y}▸${R} Not logged in. Running ${C}bw login${R}...\n"
+      printf "  ${Y}>${R} Not logged in. Running ${C}bw login${R}...\n"
       bw login
     fi
-    printf "  ${Y}▸${R} Unlocking vault...\n"
+    printf "  ${Y}>${R} Unlocking vault...\n"
     export BW_SESSION=$(bw unlock --raw)
     if [ -n "$BW_SESSION" ]; then
-      printf "  ${G}✓${R} Vault unlocked\n"
+      printf "  ${G}+${R} Vault unlocked\n"
 
       # --- Ensure required Bitwarden items exist ---
       BW_ITEMS=("exa-api-key:Exa:https://exa.ai" "firecrawl-api-key:Firecrawl:https://firecrawl.dev" "fal-api-key:fal.ai:https://fal.ai")
@@ -199,7 +199,7 @@ if [ "$ENABLE_API_MCPS" = "true" ]; then
           ITEM_LABEL="${REST%%:*}"
           ITEM_URL="${REST#*:}"
           if bw get password "$ITEM_NAME" >/dev/null 2>&1; then
-            printf "  ${G}✓${R} %s — already configured\n" "$ITEM_LABEL"
+            printf "  ${G}+${R} %s - already configured\n" "$ITEM_LABEL"
           else
             printf "  ${C}%s${R} ${D}(%s)${R}\n" "$ITEM_LABEL" "$ITEM_URL"
             printf "  API key: "
@@ -211,12 +211,12 @@ if [ "$ENABLE_API_MCPS" = "true" ]; then
                   '.name = $name | .login.password = $pw | .type = 1' | \
                 bw encode | bw create item >/dev/null 2>&1
               if bw get password "$ITEM_NAME" >/dev/null 2>&1; then
-                printf "  ${G}✓${R} %s saved\n" "$ITEM_LABEL"
+                printf "  ${G}+${R} %s saved\n" "$ITEM_LABEL"
               else
-                printf "  ${RED}✗${R} Failed to save %s — add manually later\n" "$ITEM_LABEL"
+                printf "  ${RED}x${R} Failed to save %s - add manually later\n" "$ITEM_LABEL"
               fi
             else
-              printf "  ${Y}▸${R} Skipped %s\n" "$ITEM_LABEL"
+              printf "  ${Y}>${R} Skipped %s\n" "$ITEM_LABEL"
             fi
           fi
         done
@@ -231,19 +231,19 @@ if [ "$ENABLE_API_MCPS" = "true" ]; then
 TOML
       printf "\n${B}Re-applying dotfiles with API keys...${R}\n"
       chezmoi apply
-      printf "  ${G}✓${R} API MCPs configured\n"
+      printf "  ${G}+${R} API MCPs configured\n"
     else
-      printf "  ${RED}✗${R} Failed to unlock vault.\n"
+      printf "  ${RED}x${R} Failed to unlock vault.\n"
       printf "  Run manually: ${C}export BW_SESSION=\$(bw unlock --raw) && chezmoi apply${R}\n\n"
     fi
   else
-    printf "\n${Y}⚠${R}  Skipping API MCPs — install Bitwarden CLI later and run:\n"
+    printf "\n${Y}!${R}  Skipping API MCPs - install Bitwarden CLI later and run:\n"
     printf "  ${C}bw login && export BW_SESSION=\$(bw unlock --raw) && chezmoi apply${R}\n\n"
   fi
 fi
 
 # --- Done ---
-printf "\n${G}✓ Done!${R}\n\n"
+printf "\n${G}+ Done!${R}\n\n"
 printf "${B}Verify:${R}\n"
 printf "  ${C}claude mcp list${R}            # Claude Code MCPs\n"
 printf "  ${C}cat ~/.cursor/mcp.json${R}     # Cursor MCPs\n"

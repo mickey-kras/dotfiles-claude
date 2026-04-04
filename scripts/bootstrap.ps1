@@ -67,14 +67,14 @@ Write-Host ""
 # --- MCP Selection ---
 Write-Host "MCP Configuration" -ForegroundColor White
 Write-Host ""
-Write-Host "  + Playwright        — Browser automation, E2E testing" -ForegroundColor Green
-Write-Host "  + Context7          — Up-to-date library docs" -ForegroundColor Green
-Write-Host "  + Sentry            — Error tracking, stack traces (OAuth)" -ForegroundColor Green
-Write-Host "  + Figma             — Design-to-code (OAuth)" -ForegroundColor Green
+Write-Host "  + Playwright        - Browser automation, E2E testing" -ForegroundColor Green
+Write-Host "  + Context7          - Up-to-date library docs" -ForegroundColor Green
+Write-Host "  + Sentry            - Error tracking, stack traces (OAuth)" -ForegroundColor Green
+Write-Host "  + Figma             - Design-to-code (OAuth)" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Optional:" -ForegroundColor White
-Write-Host "  [1] Azure DevOps     — Work items, PRs, pipelines" -ForegroundColor Cyan
-Write-Host "  [2] API MCPs         — Exa, Firecrawl, fal-ai (requires Bitwarden)" -ForegroundColor Cyan
+Write-Host "  [1] Azure DevOps     - Work items, PRs, pipelines" -ForegroundColor Cyan
+Write-Host "  [2] API MCPs         - Exa, Firecrawl, fal-ai (requires Bitwarden)" -ForegroundColor Cyan
 Write-Host ""
 
 $enableAzureDevOps = $false
@@ -129,7 +129,7 @@ if (Test-Path $chezmoiSrc) { Remove-Item $chezmoiSrc -Recurse -Force }
 Remove-Item "$configDir\chezmoistate.boltdb" -ErrorAction SilentlyContinue
 Remove-Item "$configDir\chezmoistate" -ErrorAction SilentlyContinue
 
-# --- Init + apply (fresh clone — no stale templates) ---
+# --- Init + apply (fresh clone - no stale templates) ---
 Write-Host ""
 Write-Host "Applying dotfiles..." -ForegroundColor White
 try {

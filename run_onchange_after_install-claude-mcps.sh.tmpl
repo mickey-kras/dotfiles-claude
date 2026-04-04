@@ -11,7 +11,7 @@ set -uo pipefail
 FAILED=0
 
 # ============================================================
-# 1. Claude Code CLI — via `claude mcp add`
+# 1. Claude Code CLI - via `claude mcp add`
 # ============================================================
 
 if command -v claude >/dev/null 2>&1; then
@@ -46,11 +46,11 @@ if command -v claude >/dev/null 2>&1; then
   add_mcp fal-ai -e "FAL_KEY=# {{ (bitwarden "item" "fal-api-key").login.password }}" fal-ai -- npx -y fal-ai-mcp-server@2.1.4
   # {{ end }}
 else
-  echo "claude CLI not found — skipping Claude Code MCP setup"
+  echo "claude CLI not found - skipping Claude Code MCP setup"
 fi
 
 # ============================================================
-# 2. Claude Desktop App — merge mcpServers into existing config
+# 2. Claude Desktop App - merge mcpServers into existing config
 # ============================================================
 
 # Detect config path per platform
@@ -66,7 +66,7 @@ if [ -f "$CLAUDE_DESKTOP_CONFIG" ]; then
   echo ""
   echo "Configuring Claude Desktop App MCPs..."
 
-  # Build the mcpServers JSON — same servers as Cursor config
+  # Build the mcpServers JSON - same servers as Cursor config
   MCP_SERVERS=$(cat <<'MCPJSON'
 {
   "playwright": {
@@ -106,12 +106,12 @@ with open(config_path, 'w') as f:
 print('  + Claude Desktop MCPs updated')
 " "$CLAUDE_DESKTOP_CONFIG" "$MCP_SERVERS"
   else
-    echo "  ! python3 not found — skipping Claude Desktop config"
+    echo "  ! python3 not found - skipping Claude Desktop config"
     FAILED=$((FAILED + 1))
   fi
 else
   echo ""
-  echo "Claude Desktop not found — skipping"
+  echo "Claude Desktop not found - skipping"
 fi
 
 # ============================================================
