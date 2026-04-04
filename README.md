@@ -77,9 +77,21 @@ bw-login && chezmoi apply
 
 | Agent | Purpose |
 |-------|---------|
-| planner | Explores codebase, identifies risks, creates step-by-step implementation plans |
-| code-reviewer | Reviews diffs for bugs, security issues, and quality |
-| tdd-guide | Guides red-green-refactor cycle with strict TDD discipline |
+| delivery-orchestrator | Front door for free-form requests; decomposes work and routes to the right specialists |
+| planner | Builds phased implementation plans with file targets, risks, and verification |
+| product-manager | Clarifies problem, scope, tradeoffs, and success criteria |
+| workflow-architect | Maps workflows, states, handoffs, and failure paths |
+| backend-engineer | Owns backend implementation, contracts, schemas, and service logic |
+| frontend-engineer | Owns frontend implementation, interaction flow, and accessibility |
+| staff-engineer | Handles cross-cutting technical work that spans multiple specialties |
+| quality-engineer | Owns cross-cutting verification strategy and higher-level test implementation |
+| code-reviewer | Reviews changes for bugs, regressions, risk, and missing tests |
+| debugger | Investigates failures and isolates root cause with evidence |
+| git-workflow-master | Owns Git hygiene, rebases, recovery, and branch safety |
+| devops-engineer | Handles CI/CD, infra automation, environments, and rollout safety |
+| security-engineer | Reviews auth, trust boundaries, secrets, input handling, and abuse risk |
+| technical-writer | Writes high-signal technical docs, runbooks, migration notes, and PR text |
+| incident-commander | Coordinates production incident response, containment, and rollback direction |
 
 ### Permissions & settings
 
@@ -123,9 +135,21 @@ dot_claude/
   CLAUDE.md.tmpl                      # -> ~/.claude/CLAUDE.md
   settings.json                       # -> ~/.claude/settings.json
   agents/
+    delivery-orchestrator.md          # Request normalization and routing
     planner.md                        # Planning agent
+    product-manager.md                # Product and requirements agent
+    workflow-architect.md             # Workflow and process agent
+    backend-engineer.md               # Backend implementation agent
+    frontend-engineer.md              # Frontend implementation agent
+    staff-engineer.md                 # Cross-cutting engineering agent
+    quality-engineer.md               # Verification and higher-level testing agent
     code-reviewer.md                  # Code review agent
-    tdd-guide.md                      # TDD coaching agent
+    debugger.md                       # Debugging agent
+    git-workflow-master.md            # Git workflow agent
+    devops-engineer.md                # CI/CD and infrastructure agent
+    security-engineer.md              # Security review agent
+    technical-writer.md               # Technical documentation agent
+    incident-commander.md             # Incident response agent
 dot_cursor/
   mcp.json.tmpl                       # -> ~/.cursor/mcp.json
   rules/global.mdc.tmpl               # -> ~/.cursor/rules/global.mdc

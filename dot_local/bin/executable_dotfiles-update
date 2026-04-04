@@ -156,9 +156,21 @@ section "5. Verifying config files"
 FILES=(
   "$HOME/.claude/CLAUDE.md"
   "$HOME/.claude/settings.json"
+  "$HOME/.claude/agents/delivery-orchestrator.md"
   "$HOME/.claude/agents/planner.md"
+  "$HOME/.claude/agents/product-manager.md"
+  "$HOME/.claude/agents/workflow-architect.md"
+  "$HOME/.claude/agents/backend-engineer.md"
+  "$HOME/.claude/agents/frontend-engineer.md"
+  "$HOME/.claude/agents/staff-engineer.md"
+  "$HOME/.claude/agents/quality-engineer.md"
   "$HOME/.claude/agents/code-reviewer.md"
-  "$HOME/.claude/agents/tdd-guide.md"
+  "$HOME/.claude/agents/debugger.md"
+  "$HOME/.claude/agents/git-workflow-master.md"
+  "$HOME/.claude/agents/devops-engineer.md"
+  "$HOME/.claude/agents/security-engineer.md"
+  "$HOME/.claude/agents/technical-writer.md"
+  "$HOME/.claude/agents/incident-commander.md"
 )
 
 for f in "${FILES[@]}"; do
