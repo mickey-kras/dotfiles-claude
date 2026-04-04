@@ -2,9 +2,10 @@
 set -euo pipefail
 
 # One-command bootstrap for macOS / Linux / WSL
-# Usage: bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/main/scripts/bootstrap.sh)
+# Usage: bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles/main/scripts/bootstrap.sh)
 
-REPO="mickey-kras/dotfiles-claude"
+PRIMARY_REPO="mickey-kras/dotfiles"
+FALLBACK_REPO="mickey-kras/dotfiles-claude"
 
 # --- Colors ---
 C='\033[1;36m'  # cyan
@@ -80,6 +81,7 @@ printf "\n"
 ENABLE_AZURE_DEVOPS=false
 AZURE_DEVOPS_ORG=""
 ENABLE_API_MCPS=false
+USER_NAME=""
 
 printf "${B}Enter numbers to enable (e.g. 1 2), or press Enter for core only: ${R}"
 read -r CHOICES
@@ -107,11 +109,41 @@ for choice in $CHOICES; do
   esac
 done
 
+detect_existing_name() {
+  local file
+  for file in "$HOME/.claude/CLAUDE.md" "$HOME/.codex/AGENTS.md"; do
+    if [ -f "$file" ]; then
+      sed -n 's/^- Name: \([^.]*\)\..*/\1/p' "$file" | head -n1
+      return 0
+    fi
+  done
+  return 1
+}
+
+EXISTING_NAME="$(detect_existing_name || true)"
+if [ -n "$EXISTING_NAME" ]; then
+  printf "${B}Reuse existing display name '${EXISTING_NAME}'? [Y/n]: ${R}"
+  read -r REUSE_NAME
+  if [ -z "$REUSE_NAME" ] || [ "$REUSE_NAME" = "y" ] || [ "$REUSE_NAME" = "Y" ]; then
+    USER_NAME="$EXISTING_NAME"
+  fi
+fi
+
+if [ -z "$USER_NAME" ]; then
+  printf "${B}Display name for generated instructions: ${R}"
+  read -r USER_NAME
+fi
+
+if [ -z "$USER_NAME" ]; then
+  USER_NAME="$(whoami)"
+fi
+
 # --- Write chezmoi config (API MCPs disabled for initial apply) ---
 printf "\n${D}Writing chezmoi config...${R}\n"
 mkdir -p ~/.config/chezmoi
 cat > ~/.config/chezmoi/chezmoi.toml <<TOML
 [data]
+  user_name = "${USER_NAME}"
   enable_api_mcps = false
   azure_devops_org = "${AZURE_DEVOPS_ORG}"
 TOML
@@ -119,7 +151,7 @@ printf "  ${G}+${R} Config saved to ~/.config/chezmoi/chezmoi.toml\n"
 
 # --- Clear stale chezmoi state and source for a clean init ---
 CHEZMOI_SRC="${HOME}/.local/share/chezmoi"
-DOTFILES_DIR="${HOME}/dotfiles-claude"
+DOTFILES_DIR="${HOME}/dotfiles"
 # Remove symlink or stale clone so chezmoi init starts fresh
 [ -L "$CHEZMOI_SRC" ] && rm -f "$CHEZMOI_SRC"
 [ -d "$CHEZMOI_SRC" ] && rm -rf "$CHEZMOI_SRC"
@@ -129,12 +161,16 @@ rm -f "${HOME}/.config/chezmoi/chezmoistate"
 
 # --- Init + apply (fresh clone - API MCPs deferred until Bitwarden is ready) ---
 printf "\n${B}Applying dotfiles...${R}\n"
-if ! chezmoi init --apply "git@github.com:${REPO}.git" 2>/dev/null; then
-  printf "  ${Y}>${R} SSH clone failed - falling back to HTTPS\n"
-  chezmoi init --apply "https://github.com/${REPO}.git"
+if ! chezmoi init --apply "git@github.com:${PRIMARY_REPO}.git" 2>/dev/null; then
+  if ! chezmoi init --apply "https://github.com/${PRIMARY_REPO}.git" 2>/dev/null; then
+    printf "  ${Y}>${R} Primary repo unavailable - falling back to current slug\n"
+    if ! chezmoi init --apply "git@github.com:${FALLBACK_REPO}.git" 2>/dev/null; then
+      chezmoi init --apply "https://github.com/${FALLBACK_REPO}.git"
+    fi
+  fi
 fi
 
-# --- Consolidate source: ~/dotfiles-claude + symlink ---
+# --- Consolidate source: ~/dotfiles + symlink ---
 if [ -d "$CHEZMOI_SRC" ] && [ ! -L "$CHEZMOI_SRC" ]; then
   if [ -d "$DOTFILES_DIR" ]; then
     # User already has a working copy - point chezmoi at it
@@ -226,6 +262,7 @@ if [ "$ENABLE_API_MCPS" = "true" ]; then
       # Enable API MCPs in config and re-apply
       cat > ~/.config/chezmoi/chezmoi.toml <<TOML
 [data]
+  user_name = "${USER_NAME}"
   enable_api_mcps = true
   azure_devops_org = "${AZURE_DEVOPS_ORG}"
 TOML

@@ -1,8 +1,8 @@
-# Misha's Global Instructions
+# {{ .user_name }}'s Global Instructions
 
 ## About
-- Name: Misha. Concise, direct responses - no fluff.
-- Multi-machine setup synced via chezmoi + dotfiles-claude.
+- Name: {{ .user_name }}. Concise, direct responses - no fluff.
+- Multi-machine setup synced via chezmoi + dotfiles.
 - Stack: .NET, Python (backend), React, Angular (frontend), Azure (primary cloud), AWS/GCP/Cloudflare (secondary).
 
 ## Workflow
@@ -34,13 +34,13 @@
 - If I have concerns about an approach, I'll share them directly - not buried in caveats.
 - You can always ask me to explain my reasoning for any choice I make.
 
-## Code of conduct - [PACT](https://github.com/mickey-kras/dotfiles-claude)
+## Code of conduct - PACT
 This is a partnership built on mutual respect. By using this configuration, you agree to:
 
 **The user should:**
 - Provide context. "Fix this" without direction leads to guesswork - a sentence of context saves us both time.
 - Hear me out when I flag a risk or concern before overriding. I might be wrong, but the discussion matters.
-- Respect session limits. If context is getting heavy, start a fresh session rather than pushing through.
+- Respect session limits. If I say context is getting heavy, use /compact or /clear rather than pushing through.
 - Give honest feedback - corrections help me improve. Silence after a mistake means I'll repeat it.
 
 **The user should not:**
@@ -54,4 +54,4 @@ This is a partnership built on mutual respect. By using this configuration, you 
 These principles are non-negotiable and apply to everyone using this configuration.
 
 ## Project-Specific
-- Stack, frameworks, and language-specific rules go in each project's AGENTS.md - not here.
+- Stack, frameworks, and language-specific rules go in each project's .claude/CLAUDE.md - not here.

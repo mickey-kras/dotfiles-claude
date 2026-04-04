@@ -1,8 +1,9 @@
 # One-command bootstrap for Windows
-# Usage: irm https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/main/scripts/bootstrap.ps1 -OutFile bootstrap.ps1; .\bootstrap.ps1
+# Usage: irm https://raw.githubusercontent.com/mickey-kras/dotfiles/main/scripts/bootstrap.ps1 -OutFile bootstrap.ps1; .\bootstrap.ps1
 
 $ErrorActionPreference = "Stop"
-$Repo = "mickey-kras/dotfiles-claude"
+$PrimaryRepo = "mickey-kras/dotfiles"
+$FallbackRepo = "mickey-kras/dotfiles-claude"
 
 # --- Logo ---
 Write-Host ""
@@ -80,6 +81,7 @@ Write-Host ""
 $enableAzureDevOps = $false
 $azureDevOpsOrg = ""
 $enableApiMcps = $false
+$userName = ""
 
 $choices = Read-Host "Enter numbers to enable (e.g. 1 2), or press Enter for core only"
 
@@ -105,6 +107,38 @@ foreach ($choice in ($choices -split '\s+')) {
     }
 }
 
+function Get-ExistingName {
+    $paths = @(
+        "$env:USERPROFILE\.claude\CLAUDE.md",
+        "$env:USERPROFILE\.codex\AGENTS.md"
+    )
+    foreach ($path in $paths) {
+        if (Test-Path $path) {
+            $match = Select-String -Path $path -Pattern '^- Name: ([^.]+)\.' | Select-Object -First 1
+            if ($match) {
+                return $match.Matches[0].Groups[1].Value
+            }
+        }
+    }
+    return $null
+}
+
+$existingName = Get-ExistingName
+if ($existingName) {
+    $reuseName = Read-Host "Reuse existing display name '$existingName'? [Y/n]"
+    if (-not $reuseName -or $reuseName -eq "y" -or $reuseName -eq "Y") {
+        $userName = $existingName
+    }
+}
+
+if (-not $userName) {
+    $userName = Read-Host "Display name for generated instructions"
+}
+
+if (-not $userName) {
+    $userName = $env:USERNAME
+}
+
 # --- Write chezmoi config ---
 Write-Host ""
 Write-Host "Writing chezmoi config..." -ForegroundColor DarkGray
@@ -112,6 +146,7 @@ $configDir = "$env:USERPROFILE\.config\chezmoi"
 New-Item -ItemType Directory -Path $configDir -Force | Out-Null
 @"
 [data]
+  user_name = "$userName"
   enable_api_mcps = false
   azure_devops_org = "$azureDevOpsOrg"
 "@ | Set-Content "$configDir\chezmoi.toml"
@@ -119,7 +154,7 @@ Write-Host "  + Config saved" -ForegroundColor Green
 
 # --- Clear stale chezmoi state and source for a clean init ---
 $chezmoiSrc = "$env:USERPROFILE\.local\share\chezmoi"
-$dotfilesDir = "$env:USERPROFILE\dotfiles-claude"
+$dotfilesDir = "$env:USERPROFILE\dotfiles"
 # Remove symlink/junction or stale clone so chezmoi init starts fresh
 if ((Test-Path $chezmoiSrc) -and ((Get-Item $chezmoiSrc).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
     Remove-Item $chezmoiSrc -Force
@@ -133,13 +168,21 @@ Remove-Item "$configDir\chezmoistate" -ErrorAction SilentlyContinue
 Write-Host ""
 Write-Host "Applying dotfiles..." -ForegroundColor White
 try {
-    chezmoi init --apply "git@github.com:${Repo}.git"
+    chezmoi init --apply "git@github.com:${PrimaryRepo}.git"
 } catch {
-    Write-Host "  * SSH clone failed - falling back to HTTPS" -ForegroundColor Yellow
-    chezmoi init --apply "https://github.com/${Repo}.git"
+    try {
+        chezmoi init --apply "https://github.com/${PrimaryRepo}.git"
+    } catch {
+        Write-Host "  * Primary repo unavailable - falling back to current slug" -ForegroundColor Yellow
+        try {
+            chezmoi init --apply "git@github.com:${FallbackRepo}.git"
+        } catch {
+            chezmoi init --apply "https://github.com/${FallbackRepo}.git"
+        }
+    }
 }
 
-# --- Consolidate source: ~/dotfiles-claude + junction ---
+# --- Consolidate source: ~/dotfiles + junction ---
 if ((Test-Path $chezmoiSrc) -and -not ((Get-Item $chezmoiSrc).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
     if (Test-Path $dotfilesDir) {
         Remove-Item $chezmoiSrc -Recurse -Force
@@ -231,6 +274,7 @@ if ($enableApiMcps) {
             # Enable API MCPs in config and re-apply
             @"
 [data]
+  user_name = "$userName"
   enable_api_mcps = true
   azure_devops_org = "$azureDevOpsOrg"
 "@ | Set-Content "$configDir\chezmoi.toml"

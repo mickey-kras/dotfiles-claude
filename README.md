@@ -1,4 +1,4 @@
-# dotfiles-claude
+# dotfiles
 
 AI toolchain config synced across machines with [chezmoi](https://chezmoi.io). One command sets up Claude Code, Cursor, and Codex with shared MCPs, agents, and permissions.
 
@@ -6,27 +6,33 @@ AI toolchain config synced across machines with [chezmoi](https://chezmoi.io). O
 
 **macOS / Linux / WSL / Windows (Git Bash):**
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles-claude/main/scripts/bootstrap.sh)
+bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles/main/scripts/bootstrap.sh)
 ```
 
 **Already have chezmoi?**
+```bash
+chezmoi init --apply git@github.com:mickey-kras/dotfiles.git
+```
+
+If the GitHub repo has not been renamed yet, use the current slug instead:
 ```bash
 chezmoi init --apply git@github.com:mickey-kras/dotfiles-claude.git
 ```
 
 **Can't use SSH?** The repo is public - HTTPS works without auth:
 ```bash
-chezmoi init --apply https://github.com/mickey-kras/dotfiles-claude.git
+chezmoi init --apply https://github.com/mickey-kras/dotfiles.git
 ```
 
-**No git/SSH access at all?** Download the [zip from GitHub](https://github.com/mickey-kras/dotfiles-claude/archive/refs/heads/main.zip), extract to `~/dotfiles-claude`, then:
+**No git/SSH access at all?** Download the [zip from GitHub](https://github.com/mickey-kras/dotfiles/archive/refs/heads/main.zip), extract to `~/dotfiles`, then:
 ```bash
-chezmoi init --apply --source ~/dotfiles-claude
+chezmoi init --apply --source ~/dotfiles
 ```
 
 You'll get two prompts:
-1. **API-key MCPs** (exa, firecrawl, fal-ai) - requires Bitwarden CLI. Say no to skip.
-2. **Azure DevOps org** - enter your org name, or press Enter to skip.
+1. **Display name** - reused from your local config when available, otherwise prompted once.
+2. **API-key MCPs** (exa, firecrawl, fal-ai) - requires Bitwarden CLI. Say no to skip.
+3. **Azure DevOps org** - enter your org name, or press Enter to skip.
 
 ## What gets installed
 
@@ -62,7 +68,7 @@ bw login && export BW_SESSION=$(bw unlock --raw) && chezmoi apply
 
 `~/.claude/settings.json` ships with pre-approved permissions for common dev tools (git, gh, npm, node, docker, az, terraform, kubectl, k6, aws, gcloud, wrangler, etc.), a deny list for dangerous operations (sudo, rm -rf /, etc.), and `model: "opus"` so Claude Code uses the current Opus line by default.
 
-`~/.claude/CLAUDE.md` contains lightweight global preferences (Conventional Commits, feature branches, CLI-first workflow).
+`~/.claude/CLAUDE.md` contains lightweight global preferences (Conventional Commits, feature branches, CLI-first workflow) and is rendered with your configured display name.
 
 `~/.codex/AGENTS.md` mirrors those same global preferences for Codex, so both tools behave consistently across machines.
 
@@ -95,7 +101,7 @@ For a quick pull-only update: `chezmoi update`
 .chezmoi.toml.tmpl                    # Setup prompts (API MCPs, Azure DevOps org)
 .chezmoiignore                        # Platform-conditional exclusions
 dot_claude/
-  CLAUDE.md                           # -> ~/.claude/CLAUDE.md
+  CLAUDE.md.tmpl                      # -> ~/.claude/CLAUDE.md
   settings.json                       # -> ~/.claude/settings.json
   agents/
     planner.md                        # Planning agent
@@ -103,10 +109,10 @@ dot_claude/
     tdd-guide.md                      # TDD coaching agent
 dot_cursor/
   mcp.json.tmpl                       # -> ~/.cursor/mcp.json
-  rules/global.mdc                    # -> ~/.cursor/rules/global.mdc
+  rules/global.mdc.tmpl               # -> ~/.cursor/rules/global.mdc
 dot_codex/
   config.toml.tmpl                    # -> ~/.codex/config.toml
-  AGENTS.md                           # -> ~/.codex/AGENTS.md
+  AGENTS.md.tmpl                      # -> ~/.codex/AGENTS.md
 dot_config/
   git/hooks/
     _misha_git_policy.py              # Shared policy checker

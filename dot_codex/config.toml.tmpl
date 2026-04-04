@@ -1,5 +1,5 @@
 # Codex global configuration
-# Managed by chezmoi - edit the template at ~/dotfiles-claude/dot_codex/config.toml.tmpl
+# Managed by chezmoi - edit the template at ~/dotfiles/dot_codex/config.toml.tmpl
 
 model = "gpt-5.4"
 model_reasoning_effort = "medium"
@@ -7,13 +7,6 @@ model_reasoning_effort = "medium"
 [mcp_servers.playwright]
 command = "npx"
 args = ["-y", "@playwright/mcp@0.0.68"]
-
-[mcp_servers.github]
-type = "http"
-url = "https://api.githubcopilot.com/mcp/"
-
-[mcp_servers.github.headers]
-Authorization = "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"
 
 [mcp_servers.slack]
 type = "http"
