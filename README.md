@@ -1,6 +1,6 @@
 # dotfiles
 
-AI toolchain config synced across machines with [chezmoi](https://chezmoi.io). One command sets up Claude Code, Cursor, and Codex with shared MCPs, agents, and permissions.
+AI toolchain config synced across machines with [chezmoi](https://chezmoi.io). One command sets up Claude Code, Cursor, and Codex with shared MCPs, agents, permissions, and Bitwarden-backed secret wrappers.
 
 ## Quick start
 
@@ -26,7 +26,7 @@ chezmoi init --apply --source ~/dotfiles
 
 You'll get two prompts:
 1. **Display name** - reused from your local config when available, otherwise prompted once.
-2. **API-key MCPs** (exa, firecrawl, fal-ai) - requires Bitwarden CLI. Say no to skip.
+2. **Bitwarden-backed MCPs** (GitHub, AWS, Tailscale, Exa, Firecrawl, fal-ai) - requires Bitwarden CLI. Say no to skip.
 3. **Azure DevOps org** - enter your org name, or press Enter to skip.
 
 ## What gets installed
@@ -40,14 +40,37 @@ All versions are pinned for supply-chain safety. OAuth MCPs authenticate in the 
 | Playwright 0.0.68 | stdio (npx) | None | Browser automation and E2E testing |
 | Context7 | Remote HTTP | OAuth | Up-to-date library docs and code examples |
 | Figma | Remote HTTP | OAuth | Design-to-code: layouts, tokens, component variants |
+| Filesystem 2026.1.14 | stdio (npx) | None | Local file browsing rooted at `~/Dev` |
+| Git 2.10.5 | stdio (npx) | None | Repository history and diff operations |
+| Shell 2.0.15 | stdio (npx) | None | Controlled shell MCP access |
+| Terraform 0.13.0 | stdio (npx) | None | Terraform inspection and IaC workflows |
+| Kubernetes 3.4.0 | stdio (npx) | None | Cluster and manifest inspection |
+| Process 1.5.10 | stdio (npx) | None | Local process inspection |
+| Sequential Thinking 2025.12.18 | stdio (npx) | None | Structured reasoning MCP |
+| Memory 2026.1.26 | stdio (npx) | None | Local MCP memory store |
+| HTTP Fetch 2025.4.7 | stdio (uvx) | None | HTTP fetch and page retrieval |
+| GitHub 2025.4.8 | stdio (npx) | Bitwarden item `mcp-github` | GitHub API access with PAT |
+| AWS 1.3.26 | stdio (uvx) | Bitwarden item `mcp-aws` | AWS API access with key pair |
+| Tailscale 0.3.2 | stdio (npx) | Bitwarden item `mcp-tailscale` | Tailscale admin API access |
+| Docker MCP Gateway | stdio (docker) | Docker Desktop / Engine | Docker MCP toolkit bridge |
 | Azure DevOps 2.5.0 | stdio (npx) | PAT/OAuth | Work items, PRs, pipelines, repos (org-scoped) |
 | Exa 3.1.9 | stdio (npx) | API key | AI-powered web search |
 | Firecrawl 3.11.0 | stdio (npx) | API key | Web scraping and crawling |
 | fal-ai 2.1.4 | stdio (npx) | API key | AI image generation |
 
-**API MCPs** (last 3) require [Bitwarden CLI](https://bitwarden.com/help/cli/). Store keys as Login items named `exa-api-key`, `firecrawl-api-key`, `fal-api-key` (API key in the Password field). Then:
+**Bitwarden-backed MCPs** require [Bitwarden CLI](https://bitwarden.com/help/cli/) plus a valid `~/.bw_session` file. Run `bw-login` after installing dotfiles to refresh it.
+
+Required Bitwarden items and structure:
+- `mcp-github`: login password = GitHub PAT
+- `mcp-aws`: custom fields `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+- `mcp-tailscale`: login password = Tailscale API key, custom field `TAILSCALE_TAILNET`
+- `exa-api-key`: login password = Exa API key
+- `firecrawl-api-key`: login password = Firecrawl API key
+- `fal-api-key`: login password = fal.ai API key
+
+Then:
 ```bash
-bw login && export BW_SESSION=$(bw unlock --raw) && chezmoi apply
+bw-login && chezmoi apply
 ```
 
 ### Agents
@@ -67,6 +90,8 @@ bw login && export BW_SESSION=$(bw unlock --raw) && chezmoi apply
 `~/.codex/AGENTS.md` mirrors those same global preferences for Codex, so both tools behave consistently across machines. Cursor gets the same ignore rule through `~/.cursor/rules/global.mdc`.
 
 Global Git hooks are also installed at `~/.config/git/hooks` and enabled through `core.hooksPath`, so the same charset and no-AI-attribution rules are enforced before commit and before push across all local repositories.
+
+`~/.local/bin/bw-mcp` and `~/.local/bin/bw-login` are installed as shared helpers so Claude, Codex, and Cursor can all use the same Bitwarden-backed MCP definitions.
 
 ## What gets configured
 
@@ -92,7 +117,7 @@ For a quick pull-only update: `chezmoi update`
 ## File structure
 
 ```
-.chezmoi.toml.tmpl                    # Setup prompts (API MCPs, Azure DevOps org)
+.chezmoi.toml.tmpl                    # Setup prompts (Bitwarden-backed MCPs, Azure DevOps org)
 .chezmoiignore                        # Platform-conditional exclusions
 dot_claude/
   CLAUDE.md.tmpl                      # -> ~/.claude/CLAUDE.md
@@ -115,6 +140,9 @@ dot_config/
     pre-push                          # Outgoing commit history checks
 dot_local/
   bin/
+    executable_bw-mcp                 # -> ~/.local/bin/bw-mcp
+    executable_bw-login               # -> ~/.local/bin/bw-login
+    executable_bw-login.cmd           # -> ~/.local/bin/bw-login.cmd (Windows only)
     executable_dotfiles-update        # -> ~/.local/bin/dotfiles-update
     executable_dotfiles-update.cmd    # -> ~/.local/bin/dotfiles-update.cmd (Windows only)
 scripts/
@@ -138,6 +166,6 @@ scripts/
 
 **Required:** git, chezmoi (auto-installed by bootstrap), bash (Git Bash on Windows)
 
-**For MCPs:** node, npx
+**For MCPs:** node, npx, uv
 
-**For API MCPs:** Bitwarden CLI (`bw`)
+**For Bitwarden-backed MCPs:** Bitwarden CLI (`bw`)

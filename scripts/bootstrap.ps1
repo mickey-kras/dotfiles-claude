@@ -39,11 +39,12 @@ $missing = @()
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) { $missing += "git" }
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) { $missing += "node" }
 if (-not (Get-Command npx -ErrorAction SilentlyContinue)) { $missing += "npx" }
+if (-not (Get-Command uvx -ErrorAction SilentlyContinue)) { $missing += "uvx" }
 
 if ($missing.Count -gt 0) {
     Write-Host ""
     Write-Host "! Missing: $($missing -join ', ')" -ForegroundColor Yellow
-    Write-Host "  MCPs require node/npx." -ForegroundColor DarkGray
+    Write-Host "  Some MCPs require node/npx/uvx." -ForegroundColor DarkGray
     Write-Host ""
 }
 
@@ -73,7 +74,7 @@ Write-Host "  + Figma             - Design-to-code (OAuth)" -ForegroundColor Gre
 Write-Host ""
 Write-Host "  Optional:" -ForegroundColor White
 Write-Host "  [1] Azure DevOps     - Work items, PRs, pipelines" -ForegroundColor Cyan
-Write-Host "  [2] API MCPs         - Exa, Firecrawl, fal-ai (requires Bitwarden)" -ForegroundColor Cyan
+Write-Host "  [2] Bitwarden MCPs   - GitHub, AWS, Tailscale, Exa, Firecrawl, fal-ai" -ForegroundColor Cyan
 Write-Host ""
 
 $enableAzureDevOps = $false
@@ -96,7 +97,7 @@ foreach ($choice in ($choices -split '\s+')) {
         }
         "2" {
             $enableApiMcps = $true
-            Write-Host "  + API MCPs enabled" -ForegroundColor Green
+            Write-Host "  + Bitwarden-backed MCPs enabled" -ForegroundColor Green
         }
         "" { }
         default {
@@ -183,11 +184,11 @@ if ((Test-Path $chezmoiSrc) -and -not ((Get-Item $chezmoiSrc).Attributes -band [
     Write-Host "  + Source linked: $chezmoiSrc -> $dotfilesDir" -ForegroundColor Green
 }
 
-# --- Bitwarden setup (if API MCPs enabled) ---
+# --- Bitwarden setup (if Bitwarden-backed MCPs enabled) ---
 if ($enableApiMcps) {
     if (-not (Get-Command bw -ErrorAction SilentlyContinue)) {
         Write-Host ""
-        Write-Host "Bitwarden CLI required for API MCPs" -ForegroundColor White
+        Write-Host "Bitwarden CLI required for Bitwarden-backed MCPs" -ForegroundColor White
         $bwInstall = Read-Host "Install now? [Y/n]"
         if ($bwInstall -ne "n" -and $bwInstall -ne "N") {
             if (Get-Command winget -ErrorAction SilentlyContinue) {
@@ -261,7 +262,7 @@ if ($enableApiMcps) {
                 bw sync 2>$null | Out-Null
             }
 
-            # Enable API MCPs in config and re-apply
+            # Enable Bitwarden-backed MCPs in config and re-apply
             @"
 [data]
   user_name = "$userName"
@@ -270,22 +271,24 @@ if ($enableApiMcps) {
 "@ | Set-Content "$configDir\chezmoi.toml"
 
             Write-Host ""
-            Write-Host "Re-applying dotfiles with API keys..." -ForegroundColor White
+            Write-Host "Re-applying dotfiles with Bitwarden-backed MCPs..." -ForegroundColor White
             chezmoi apply
-            Write-Host "  + API MCPs configured" -ForegroundColor Green
+            Write-Host "  + Bitwarden-backed MCPs configured" -ForegroundColor Green
         } else {
             Write-Host "  ! Failed to unlock vault." -ForegroundColor Red
             Write-Host '  Run manually: $env:BW_SESSION = $(bw unlock --raw); chezmoi apply' -ForegroundColor Cyan
         }
     } else {
         Write-Host ""
-        Write-Host "! Skipping API MCPs - install Bitwarden CLI later and run:" -ForegroundColor Yellow
+        Write-Host "! Skipping Bitwarden-backed MCPs - install Bitwarden CLI later and run:" -ForegroundColor Yellow
         Write-Host '  bw login; $env:BW_SESSION = $(bw unlock --raw); chezmoi apply' -ForegroundColor Cyan
         Write-Host ""
     }
 }
 
 # --- Done ---
+New-Item -ItemType Directory -Path "$env:USERPROFILE\Dev" -Force | Out-Null
+
 Write-Host ""
 Write-Host "+ Done!" -ForegroundColor Green
 Write-Host ""
@@ -295,5 +298,6 @@ Write-Host "  Get-Content ~/.cursor/mcp.json   # Cursor MCPs" -ForegroundColor C
 Write-Host "  Get-Content ~/.codex/config.toml # Codex config" -ForegroundColor Cyan
 Write-Host "  Get-Content ~/.codex/AGENTS.md  # Codex global instructions" -ForegroundColor Cyan
 Write-Host "  ls ~/.claude/agents/       # Agents" -ForegroundColor Cyan
+Write-Host "  bw-login                    # Refresh Bitwarden session file" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Update later: dotfiles-update" -ForegroundColor DarkGray

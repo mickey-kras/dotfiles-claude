@@ -10,6 +10,8 @@
       "Bash(python3 *)",
       "Bash(pip *)",
       "Bash(pytest *)",
+      "Bash(bw *)",
+      "Bash(uvx *)",
       "Bash(az *)",
       "Bash(terraform *)",
       "Bash(kubectl *)",

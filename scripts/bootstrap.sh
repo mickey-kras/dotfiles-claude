@@ -51,10 +51,11 @@ MISSING=()
 command -v git  >/dev/null 2>&1 || MISSING+=("git")
 command -v node >/dev/null 2>&1 || MISSING+=("node")
 command -v npx  >/dev/null 2>&1 || MISSING+=("npx")
+command -v uvx  >/dev/null 2>&1 || MISSING+=("uvx")
 
 if [ ${#MISSING[@]} -gt 0 ]; then
   printf "\n${Y}!${R}  Missing: ${MISSING[*]}\n"
-  printf "   MCPs require node/npx.\n\n"
+  printf "   Some MCPs require node/npx/uvx.\n\n"
 fi
 
 # --- Detect AI tools ---
@@ -73,7 +74,7 @@ printf "  ${G}+${R} Figma             ${D}- Design-to-code (OAuth)${R}\n"
 printf "\n"
 printf "  ${B}Optional:${R}\n"
 printf "  ${C}[1]${R} Azure DevOps     ${D}- Work items, PRs, pipelines${R}\n"
-printf "  ${C}[2]${R} API MCPs         ${D}- Exa, Firecrawl, fal-ai (requires Bitwarden)${R}\n"
+printf "  ${C}[2]${R} Bitwarden MCPs   ${D}- GitHub, AWS, Tailscale, Exa, Firecrawl, fal-ai${R}\n"
 printf "\n"
 
 ENABLE_AZURE_DEVOPS=false
@@ -99,7 +100,7 @@ for choice in $CHOICES; do
       ;;
     2)
       ENABLE_API_MCPS=true
-      printf "  ${G}+${R} API MCPs enabled\n"
+      printf "  ${G}+${R} Bitwarden-backed MCPs enabled\n"
       ;;
     *)
       printf "  ${Y}>${R} Unknown option: $choice (skipped)\n"
@@ -136,7 +137,7 @@ if [ -z "$USER_NAME" ]; then
   USER_NAME="$(whoami)"
 fi
 
-# --- Write chezmoi config (API MCPs disabled for initial apply) ---
+# --- Write chezmoi config (Bitwarden-backed MCPs disabled for initial apply) ---
 printf "\n${D}Writing chezmoi config...${R}\n"
 mkdir -p ~/.config/chezmoi
 cat > ~/.config/chezmoi/chezmoi.toml <<TOML
@@ -157,7 +158,7 @@ DOTFILES_DIR="${HOME}/dotfiles"
 rm -f "${HOME}/.config/chezmoi/chezmoistate.boltdb"
 rm -f "${HOME}/.config/chezmoi/chezmoistate"
 
-# --- Init + apply (fresh clone - API MCPs deferred until Bitwarden is ready) ---
+# --- Init + apply (fresh clone - Bitwarden-backed MCPs deferred until Bitwarden is ready) ---
 printf "\n${B}Applying dotfiles...${R}\n"
 if ! chezmoi init --apply "git@github.com:${REPO}.git" 2>/dev/null; then
   printf "  ${Y}>${R} SSH clone failed - falling back to HTTPS\n"
@@ -176,10 +177,10 @@ if [ -d "$CHEZMOI_SRC" ] && [ ! -L "$CHEZMOI_SRC" ]; then
   printf "  ${G}+${R} Source linked: %s -> %s\n" "$CHEZMOI_SRC" "$DOTFILES_DIR"
 fi
 
-# --- Bitwarden setup (if API MCPs enabled) ---
+# --- Bitwarden setup (if Bitwarden-backed MCPs enabled) ---
 if [ "$ENABLE_API_MCPS" = "true" ]; then
   if ! command -v bw >/dev/null 2>&1; then
-    printf "\n${B}Bitwarden CLI required for API MCPs${R}\n"
+    printf "\n${B}Bitwarden CLI required for Bitwarden-backed MCPs${R}\n"
     printf "${B}Install now? [Y/n]: ${R}"
     read -r BW_INSTALL
     if [ "$BW_INSTALL" != "n" ] && [ "$BW_INSTALL" != "N" ]; then
@@ -253,27 +254,29 @@ if [ "$ENABLE_API_MCPS" = "true" ]; then
         bw sync >/dev/null 2>&1
       fi
 
-      # Enable API MCPs in config and re-apply
+      # Enable Bitwarden-backed MCPs in config and re-apply
       cat > ~/.config/chezmoi/chezmoi.toml <<TOML
 [data]
   user_name = "${USER_NAME}"
   enable_api_mcps = true
   azure_devops_org = "${AZURE_DEVOPS_ORG}"
 TOML
-      printf "\n${B}Re-applying dotfiles with API keys...${R}\n"
+      printf "\n${B}Re-applying dotfiles with Bitwarden-backed MCPs...${R}\n"
       chezmoi apply
-      printf "  ${G}+${R} API MCPs configured\n"
+      printf "  ${G}+${R} Bitwarden-backed MCPs configured\n"
     else
       printf "  ${RED}x${R} Failed to unlock vault.\n"
       printf "  Run manually: ${C}export BW_SESSION=\$(bw unlock --raw) && chezmoi apply${R}\n\n"
     fi
   else
-    printf "\n${Y}!${R}  Skipping API MCPs - install Bitwarden CLI later and run:\n"
+    printf "\n${Y}!${R}  Skipping Bitwarden-backed MCPs - install Bitwarden CLI later and run:\n"
     printf "  ${C}bw login && export BW_SESSION=\$(bw unlock --raw) && chezmoi apply${R}\n\n"
   fi
 fi
 
 # --- Done ---
+mkdir -p "${HOME}/Dev"
+
 printf "\n${G}+ Done!${R}\n\n"
 printf "${B}Verify:${R}\n"
 printf "  ${C}claude mcp list${R}            # Claude Code MCPs\n"
@@ -281,5 +284,6 @@ printf "  ${C}cat ~/.cursor/mcp.json${R}     # Cursor MCPs\n"
 printf "  ${C}cat ~/.codex/config.toml${R}   # Codex config\n"
 printf "  ${C}cat ~/.codex/AGENTS.md${R}    # Codex global instructions\n"
 printf "  ${C}ls ~/.claude/agents/${R}       # Agents\n\n"
+printf "  ${C}bw-login${R}                   # Refresh Bitwarden session file\n\n"
 printf "${D}Update later: dotfiles-update${R}\n"
 printf "${D}Make sure ~/.local/bin is in your PATH${R}\n"

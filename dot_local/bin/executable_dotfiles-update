@@ -104,8 +104,21 @@ fi
 # --- 4. Verify MCPs ---
 section "4. Verifying MCP registration"
 if command -v claude >/dev/null 2>&1; then
-  EXPECTED=("playwright" "context7" "figma")
-  REGISTERED=$(claude mcp list --scope user 2>/dev/null || echo "")
+  EXPECTED=("playwright" "context7" "figma" "filesystem" "git" "shell" "terraform" "kubernetes" "process" "thinking" "memory")
+  REGISTERED=$(claude mcp list 2>/dev/null || echo "")
+
+  if command -v uvx >/dev/null 2>&1; then
+    EXPECTED+=("http")
+  fi
+  if command -v docker >/dev/null 2>&1; then
+    EXPECTED+=("MCP_DOCKER")
+  fi
+  if command -v bw >/dev/null 2>&1; then
+    EXPECTED+=("github" "tailscale")
+    if command -v uvx >/dev/null 2>&1; then
+      EXPECTED+=("aws")
+    fi
+  fi
 
   for mcp in "${EXPECTED[@]}"; do
     if echo "$REGISTERED" | grep -qi "$mcp"; then
@@ -164,6 +177,9 @@ if command -v codex >/dev/null 2>&1; then
   [ -f "$HOME/.codex/config.toml" ] && ok "codex/config.toml" || fail "codex/config.toml - missing"
   [ -f "$HOME/.codex/AGENTS.md" ] && ok "codex/AGENTS.md" || fail "codex/AGENTS.md - missing"
 fi
+
+[ -f "$HOME/.local/bin/bw-mcp" ] && ok "bw-mcp" || warn "bw-mcp - missing"
+[ -f "$HOME/.local/bin/bw-login" ] && ok "bw-login" || warn "bw-login - missing"
 
 # --- Summary ---
 printf "\n${G}+ Update complete${R}\n"

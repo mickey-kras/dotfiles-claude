@@ -1,0 +1,48 @@
+#!/usr/bin/env node
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
+const { spawnSync } = require("child_process");
+
+function fail(message) {
+  console.error(message);
+  process.exit(1);
+}
+
+const statusResult = spawnSync("bw", ["status"], {
+  encoding: "utf8",
+  stdio: ["inherit", "pipe", "pipe"]
+});
+
+let status = "unauthenticated";
+if (statusResult.status === 0) {
+  try {
+    status = JSON.parse(statusResult.stdout).status;
+  } catch {
+    status = "unknown";
+  }
+}
+
+if (status === "unauthenticated") {
+  const loginResult = spawnSync("bw", ["login"], { stdio: "inherit" });
+  if (loginResult.status !== 0) {
+    process.exit(loginResult.status ?? 1);
+  }
+}
+
+const unlockResult = spawnSync("bw", ["unlock", "--raw"], {
+  encoding: "utf8",
+  stdio: ["inherit", "pipe", "inherit"]
+});
+if (unlockResult.status !== 0) {
+  process.exit(unlockResult.status ?? 1);
+}
+
+const session = unlockResult.stdout.trim();
+if (!session) {
+  fail("ERROR: Bitwarden unlock returned an empty session.");
+}
+
+const sessionPath = path.join(os.homedir(), ".bw_session");
+fs.writeFileSync(sessionPath, `${session}\n`, { mode: 0o600 });
+console.log(`BW_SESSION saved to ${sessionPath}`);
