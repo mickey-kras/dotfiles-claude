@@ -1,10 +1,14 @@
 {{- /* Chezmoi config - runs during `chezmoi init`. Re-run init to change. */ -}}
 
 {{- $userName := promptStringOnce . "user_name" "Display name for generated instructions" -}}
+{{- $userRoleSummary := promptStringOnce . "user_role_summary" "Short role summary for generated instructions" -}}
+{{- $userStackSummary := promptStringOnce . "user_stack_summary" "Current stack summary for generated instructions" -}}
 {{- $enableApiMcps := promptBoolOnce . "enable_api_mcps" "Enable Bitwarden-backed MCPs (GitHub, AWS, Tailscale, Exa, Firecrawl, fal-ai)?" -}}
 {{- $azureDevOpsOrg := promptStringOnce . "azure_devops_org" "Azure DevOps org name (press Enter to skip)" -}}
 
 [data]
   user_name = {{ $userName | quote }}
+  user_role_summary = {{ $userRoleSummary | quote }}
+  user_stack_summary = {{ $userStackSummary | quote }}
   enable_api_mcps = {{ $enableApiMcps }}
   azure_devops_org = {{ $azureDevOpsOrg | quote }}
