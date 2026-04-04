@@ -83,11 +83,11 @@ bw-login && chezmoi apply
 
 ### Permissions & settings
 
-`~/.claude/settings.json` ships with pre-approved permissions for common dev tools (git, gh, npm, node, docker, az, terraform, kubectl, k6, aws, gcloud, wrangler, etc.), a deny list for dangerous operations (sudo, rm -rf /, etc.), and `model: "opus"` so Claude Code uses the current Opus line by default.
+`~/.claude/settings.json` ships with pre-approved permissions for common dev tools (git, gh, npm, node, docker, az, terraform, kubectl, k6, aws, gcloud, wrangler, etc.), a deny list for dangerous operations (sudo, rm -rf /, etc.), `model: "opus"` so Claude Code uses the current Opus line by default, and `ENABLE_CLAUDEAI_MCP_SERVERS=false` so Claude stays MCP-only instead of surfacing `claude.ai` connector-backed tools.
 
-`~/.claude/CLAUDE.md` contains lightweight global preferences (Conventional Commits, feature branches, CLI-first workflow), is rendered with your configured display name, and explicitly ignores Sentry even if it appears locally.
+`~/.claude/CLAUDE.md` contains lightweight global preferences (Conventional Commits, feature branches, CLI-first workflow), is rendered with your configured display name, explicitly requires MCP-only workflows with no connectors, and explicitly ignores Sentry even if it appears locally.
 
-`~/.codex/AGENTS.md` mirrors those same global preferences for Codex, so both tools behave consistently across machines. Cursor gets the same ignore rule through `~/.cursor/rules/global.mdc`.
+`~/.codex/AGENTS.md` mirrors those same global preferences for Codex, so both tools behave consistently across machines. Cursor gets the same MCP-only and ignore rules through `~/.cursor/rules/global.mdc`.
 
 Global Git hooks are also installed at `~/.config/git/hooks` and enabled through `core.hooksPath`, so the same charset and no-AI-attribution rules are enforced before commit and before push across all local repositories.
 

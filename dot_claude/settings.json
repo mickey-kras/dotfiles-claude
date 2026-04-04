@@ -53,7 +53,8 @@
     ]
   },
   "env": {
-    "EDITOR": "code --wait"
+    "EDITOR": "code --wait",
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
   },
   "model": "opus"
 }
