@@ -18,6 +18,19 @@ This directory is the staging area for workflow skills selectively vendored from
 - executing-plans
 - dispatching-parallel-agents
 
+## First Vendored Batch
+- verification-before-completion
+- systematic-debugging
+- test-driven-development
+- requesting-code-review
+- receiving-code-review
+
+These copies were normalized to local policy:
+- ASCII-safe content
+- no upstream plugin prefixes
+- no upstream "human partner" wording
+- no extra upstream test or creation artifacts unless they help execution
+
 ## Rules For Vendored Copies
 - no AI attribution text
 - no connector assumptions
