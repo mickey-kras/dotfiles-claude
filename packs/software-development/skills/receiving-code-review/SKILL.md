@@ -5,11 +5,44 @@ description: Use when receiving code review feedback, before implementing sugges
 
 # Code Review Reception
 
+## Use for
+- processing review comments before implementing them
+- evaluating whether feedback is correct for this codebase
+- clarifying unclear or conflicting review items
+
+## Do not use for
+- writing the initial review
+- blindly implementing comments without verification
+
+## Primary users
+- `backend-engineer`
+- `frontend-engineer`
+- `staff-engineer`
+- `quality-engineer`
+
+## Inputs
+- review comments
+- current code and tests
+
+## Outputs
+- clarified review items
+- reasoned acceptance or pushback
+- verified implementation of accepted items
+
 ## Overview
 
 Code review requires technical evaluation, not emotional performance.
 
 **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.
+
+## Method
+
+Use this response pattern:
+- read the full review calmly
+- restate or clarify the technical requirement
+- verify it against the codebase
+- implement accepted items one at a time
+- push back when the review is wrong for valid technical reasons
 
 ## The Response Pattern
 

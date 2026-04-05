@@ -11,9 +11,8 @@
 - `superpowers` is MIT licensed, so vendoring selected content is allowed.
 
 ## Recommendation
-- Keep the currently installed `superpowers` plugin temporarily.
 - Vendor only the high-value workflow skills first.
-- Once the vendored copies are active and verified, remove the plugin dependency.
+- Once the first-party copies are active and verified, remove the plugin dependency.
 
 ## Candidate Skills To Vendor First
 - `verification-before-completion`
@@ -47,6 +46,11 @@
 4. Install vendored skills into the managed local skill path.
 5. Verify the vendored skills cover the desired workflows.
 6. Remove the `superpowers` plugin from live plugin state.
+
+## Status
+- First-party skills are active in `packs/software-development/skills`.
+- Claude and Codex now read those managed skills from dotfiles.
+- The live `superpowers` plugin dependency has been removed locally.
 
 ## Acceptance Criteria
 - Core workflow help is available without the `superpowers` plugin.

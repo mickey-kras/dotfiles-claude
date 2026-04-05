@@ -5,13 +5,37 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 # Test-Driven Development (TDD)
 
+## Use for
+- new features
+- bug fixes
+- refactoring with behavior protection
+- behavior changes that should be locked in
+
+## Do not use for
+- throwaway prototypes unless the user explicitly wants rigor
+- generated code
+- simple configuration changes with no executable behavior to lock down
+
+## Primary users
+- `backend-engineer`
+- `frontend-engineer`
+- `staff-engineer`
+- `quality-engineer`
+- `debugger`
+
+## Inputs
+- desired behavior, bug report, or change request
+
+## Outputs
+- failing test that proves the target behavior matters
+- minimal implementation to satisfy the test
+- verification that the target path is now green
+
 ## Overview
 
 Write the test first. Watch it fail. Write minimal code to pass.
 
 **Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
-
-**Violating the letter of the rules is violating the spirit of the rules.**
 
 ## When to Use
 
@@ -34,15 +58,23 @@ Thinking "skip TDD just this once"? Stop. That's rationalization.
 NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 ```
 
-Write code before the test? Delete it. Start over.
+Write code before the test? Reset and start with the test.
 
-**No exceptions:**
-- Don't keep it as "reference"
-- Don't "adapt" it while writing tests
-- Don't look at it
-- Delete means delete
+**Do not rationalize around this:**
+- do not keep premature implementation as "reference"
+- do not adapt production code while pretending to write the test first
+- do not skip the failing-test step
 
 Implement fresh from tests. Period.
+
+## Method
+
+Follow a strict red-green-refactor loop:
+- write one failing test
+- verify it fails for the expected reason
+- write the minimum code to pass
+- verify green
+- refactor while staying green
 
 ## Red-Green-Refactor
 

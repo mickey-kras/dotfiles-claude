@@ -25,6 +25,11 @@ Rules:
 - keep the plan incremental and testable
 - if the request is too large for one plan, split it into smaller workstreams
 
+Preferred skills:
+- `writing-plans`
+- `using-git-worktrees` when isolation is useful before execution
+- `dispatching-parallel-agents` when the plan can identify safe parallel work
+
 Output format:
 - Goal
 - Current context

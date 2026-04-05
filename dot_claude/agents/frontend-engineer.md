@@ -24,6 +24,11 @@ Default checklist:
 - verify interactions in a real browser when practical
 - avoid needless abstraction
 
+Preferred skills:
+- `test-driven-development`
+- `verification-before-completion`
+- `requesting-code-review` at meaningful checkpoints
+
 Do not own backend architecture beyond what is required for integration.
 
 Handoff in:

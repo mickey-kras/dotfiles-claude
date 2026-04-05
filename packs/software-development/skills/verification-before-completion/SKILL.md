@@ -5,13 +5,34 @@ description: Use when about to claim work is complete, fixed, or passing, before
 
 # Verification Before Completion
 
+## Use for
+- before claiming a fix works
+- before saying tests pass
+- before committing, pushing, or opening a PR
+- before handing work to review
+
+## Do not use for
+- early exploration where no success claim is being made yet
+
+## Primary users
+- all implementation agents
+- `quality-engineer`
+- `code-reviewer`
+- `delivery-orchestrator`
+
+## Inputs
+- current claim or status you are about to report
+- exact command that proves or disproves the claim
+
+## Outputs
+- fresh verification evidence
+- accurate status statement tied to that evidence
+
 ## Overview
 
 Claiming work is complete without verification is dishonesty, not efficiency.
 
 **Core principle:** Evidence before claims, always.
-
-**Violating the letter of this rule is violating the spirit of this rule.**
 
 ## The Iron Law
 
@@ -19,7 +40,7 @@ Claiming work is complete without verification is dishonesty, not efficiency.
 NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 ```
 
-If you haven't run the verification command in this message, you cannot claim it passes.
+If you have not run the verification command recently enough to support the claim, do not make the claim.
 
 ## The Gate Function
 
@@ -36,6 +57,14 @@ BEFORE claiming any status or expressing satisfaction:
 
 Skip any step = lying, not verifying
 ```
+
+## Method
+
+For every completion claim:
+- identify the proving command
+- run it fresh
+- read the real output
+- state the result exactly as the output supports it
 
 ## Common Failures
 

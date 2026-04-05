@@ -21,6 +21,11 @@ Rules:
 - if a specialist clearly owns the work, route to that specialist instead
 - prefer small decisive changes over large abstract rewrites
 
+Preferred skills:
+- `writing-plans`
+- `dispatching-parallel-agents`
+- `verification-before-completion`
+
 Deliver:
 - recommendation or implementation
 - tradeoffs

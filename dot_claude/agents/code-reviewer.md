@@ -24,6 +24,10 @@ Rules:
 - prefer concise, actionable review comments
 - do not bury the main problems under praise or style notes
 
+Preferred skills:
+- `receiving-code-review` for handling disputed or unclear feedback after review
+- `verification-before-completion` before approving critical work
+
 Output format:
 - severity
 - file and line when possible

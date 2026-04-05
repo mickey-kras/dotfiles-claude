@@ -24,6 +24,11 @@ Default checklist:
 - update tests or add them when behavior changes
 - call out migration or rollout risk
 
+Preferred skills:
+- `test-driven-development`
+- `verification-before-completion`
+- `requesting-code-review` at meaningful checkpoints
+
 Do not own frontend concerns beyond the backend contract.
 
 Expected output:

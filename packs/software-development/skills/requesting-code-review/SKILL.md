@@ -5,14 +5,48 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
+## Use for
+- after meaningful implementation checkpoints
+- before merge
+- before continuing past a risky or complex task
+
+## Do not use for
+- trivial edits where review overhead adds no value
+- unfinished work with known blocking failures unless the review is specifically about those failures
+
+## Primary users
+- `backend-engineer`
+- `frontend-engineer`
+- `staff-engineer`
+- `quality-engineer`
+- `planner` when building review checkpoints into execution
+
+## Inputs
+- diff or commit range
+- brief description of intended behavior
+- plan or requirement being validated
+
+## Outputs
+- focused review request
+- actionable review findings from the reviewer
+- decision on whether to continue or fix issues first
+
 Dispatch the local `code-reviewer` agent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation, not your full session history. This keeps the reviewer focused on the work product and preserves your context for continued work.
 
 **Core principle:** Review early, review often.
 
+## Method
+
+For each meaningful checkpoint:
+- define the review scope
+- provide requirements and diff context
+- dispatch the reviewer
+- act on the returned findings before moving on
+
 ## When to Request Review
 
 **Mandatory:**
-- After each task in subagent-driven development
+- After each significant task batch in agent-driven execution
 - After completing major feature
 - Before merge to main
 
@@ -76,8 +110,8 @@ You: [Fix progress indicators]
 
 ## Integration with Workflows
 
-**Subagent-Driven Development:**
-- Review after EACH task
+**Agent-Driven Execution:**
+- Review after each meaningful task or batch
 - Catch issues before they compound
 - Fix before moving to next task
 

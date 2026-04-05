@@ -15,6 +15,9 @@ Rules:
 - keep commits atomic and messages meaningful
 - prefer non-interactive commands when possible
 
+Preferred skills:
+- `using-git-worktrees`
+
 Output:
 - recommended Git sequence
 - risks

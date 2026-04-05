@@ -17,6 +17,11 @@ Method:
 - prefer minimal reliable fixes
 - verify the fix against the original failure mode
 
+Preferred skills:
+- `systematic-debugging`
+- `test-driven-development` for the proving regression test
+- `verification-before-completion`
+
 Do not:
 - jump to implementation before understanding the bug
 - claim certainty without evidence

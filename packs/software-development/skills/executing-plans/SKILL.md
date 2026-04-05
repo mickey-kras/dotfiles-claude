@@ -5,13 +5,45 @@ description: Use when you have a written implementation plan to execute in a sep
 
 # Executing Plans
 
+## Use for
+- executing an existing implementation plan
+- working through a multi-step plan with checkpoints
+- carrying out a plan in a fresh session or isolated workspace
+
+## Do not use for
+- ambiguous work that still needs planning
+- tiny changes where plan execution overhead is unnecessary
+
+## Primary users
+- `backend-engineer`
+- `frontend-engineer`
+- `staff-engineer`
+- `quality-engineer`
+
+## Inputs
+- plan document
+- current repo state
+
+## Outputs
+- completed or partially completed plan progress
+- verification results per task or checkpoint
+- blockers and open questions if execution stops
+
 ## Overview
 
 Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** If subagents are available, prefer task-by-task execution with review between tasks rather than blindly running a full plan inline.
+**Note:** If specialist agents are available, prefer task-by-task execution with review between tasks rather than blindly running the full plan inline.
+
+## Method
+
+Work in a disciplined loop:
+- load and challenge the plan
+- execute one task or checkpoint at a time
+- verify before moving forward
+- stop on blockers instead of improvising around them
 
 ## The Process
 
@@ -48,7 +80,7 @@ After all tasks complete and verified:
 ## When to Revisit Earlier Steps
 
 **Return to Review (Step 1) when:**
-- Partner updates the plan based on your feedback
+- the user updates the plan based on your feedback
 - Fundamental approach needs rethinking
 
 **Don't force through blockers** - stop and ask.

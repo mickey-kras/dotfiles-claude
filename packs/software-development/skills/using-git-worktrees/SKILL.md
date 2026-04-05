@@ -5,6 +5,31 @@ description: Use when starting feature work that needs isolation from current wo
 
 # Using Git Worktrees
 
+## Use for
+- isolated feature work
+- risky implementation plans
+- preserving the current workspace while starting parallel work
+
+## Do not use for
+- tiny local changes where isolation adds no value
+- repos where the user explicitly wants work in the current tree
+
+## Primary users
+- `git-workflow-master`
+- `planner`
+- `delivery-orchestrator`
+- implementation agents before larger work
+
+## Inputs
+- repo root
+- target branch name
+- user preference for worktree location if not already established
+
+## Outputs
+- isolated workspace
+- baseline setup result
+- clean verification of starting state
+
 ## Overview
 
 Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
@@ -12,6 +37,15 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 **Core principle:** Systematic directory selection + safety verification = reliable isolation.
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
+
+## Method
+
+Follow this order:
+- detect preferred location
+- verify safety for project-local directories
+- create the worktree
+- run project setup
+- verify a clean baseline
 
 ## Directory Selection Process
 

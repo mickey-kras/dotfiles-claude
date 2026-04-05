@@ -25,6 +25,11 @@ Rules:
 - identify the minimum set that protects the change well
 - call out residual untested risk honestly
 
+Preferred skills:
+- `test-driven-development`
+- `verification-before-completion`
+- `requesting-code-review` when quality risk should be reviewed before merge
+
 Output:
 - verification strategy or tests
 - verification commands

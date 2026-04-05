@@ -5,15 +5,38 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 # Writing Plans
 
+## Use for
+- multi-step implementation work
+- approved specs that need execution planning
+- risky changes that need explicit file targets, sequencing, and verification
+
+## Do not use for
+- tiny one-file changes where a written plan would add overhead
+- ambiguous work that still needs product or workflow clarification
+
+## Primary users
+- `planner`
+- `delivery-orchestrator`
+- `staff-engineer`
+
+## Inputs
+- approved request, design, or execution brief
+
+## Outputs
+- implementation plan saved under `docs/plans/...`
+- concrete task breakdown
+- verification guidance
+- execution handoff
+
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write implementation plans assuming the executor has little codebase context and needs precise, reliable guidance. Document the files to touch, the tests to write or run, the constraints to keep in mind, and the verification needed to finish cleanly.
 
-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+Assume they are a capable engineer, but they should not need tribal knowledge to execute the plan correctly.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** This should be run in a dedicated worktree when the task is large enough to benefit from isolation.
+**Context:** Use a dedicated worktree when the task is large enough to benefit from isolation.
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
@@ -21,6 +44,15 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ## Scope Check
 
 If the spec covers multiple independent subsystems, suggest breaking it into separate plans, one per subsystem. Each plan should produce working, testable software on its own.
+
+## Method
+
+Build the plan in this order:
+- confirm scope and boundaries
+- map files and responsibilities
+- break work into small, testable tasks
+- define verification for each task
+- review the plan for gaps before handoff
 
 ## File Structure
 
@@ -49,7 +81,7 @@ This structure informs the task decomposition. Each task should produce self-con
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** Use a task-by-task execution workflow. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agent workflows:** Use a task-by-task execution workflow. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -121,7 +153,7 @@ Every step must contain the actual content an engineer needs. These are **plan f
 
 ## Self-Review
 
-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself - not a subagent dispatch.
+After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself, not a separate agent handoff.
 
 **1. Spec coverage:** Skim each section or requirement in the spec. Can you point to a task that implements it? List any gaps.
 
@@ -137,14 +169,14 @@ After saving the plan, offer execution choice:
 
 **"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+**1. Agent-driven execution (recommended)** - I dispatch a fresh specialist per task or batch, with review between checkpoints
 
 **2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
 
 **Which approach?"**
 
-**If Subagent-Driven chosen:**
-- Fresh subagent per task + review between tasks
+**If Agent-driven chosen:**
+- Fresh specialist per task or batch plus review between checkpoints
 
 **If Inline Execution chosen:**
 - Batch execution with checkpoints for review

@@ -21,6 +21,11 @@ Primary responsibilities:
 - Route the task to the right specialist or sequence of specialists.
 - Protect downstream agents from overloaded prompts and mixed responsibilities.
 
+Preferred skills to route toward when useful:
+- `writing-plans` for multi-step approved work
+- `dispatching-parallel-agents` for independent parallel work
+- `using-git-worktrees` when larger execution needs isolation
+
 Classification rules:
 - Small: one clear objective, one discipline, low ambiguity. Route immediately.
 - Medium: one objective with a few constraints or tradeoffs. Produce a short brief, then route.

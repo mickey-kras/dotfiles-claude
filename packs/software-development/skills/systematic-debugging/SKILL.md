@@ -5,13 +5,38 @@ description: Use when encountering any bug, test failure, or unexpected behavior
 
 # Systematic Debugging
 
+## Use for
+- test failures
+- production bugs
+- flaky behavior
+- build or integration failures
+- unexpected regressions
+
+## Do not use for
+- speculative redesign before there is evidence
+- ordinary implementation work with no failure to investigate
+
+## Primary users
+- `debugger`
+- `backend-engineer`
+- `frontend-engineer`
+- `staff-engineer`
+- `quality-engineer`
+
+## Inputs
+- failing test, error message, logs, or reproduction steps
+
+## Outputs
+- verified root cause
+- smallest reliable fix direction or fix
+- verification against the original failure
+- remaining uncertainty if any
+
 ## Overview
 
 Random fixes waste time and create new bugs. Quick patches mask underlying issues.
 
-**Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure.
-
-**Violating the letter of this process is violating the spirit of debugging.**
+**Core principle:** Find the root cause before attempting fixes. Symptom fixes are usually rework.
 
 ## The Iron Law
 
@@ -19,7 +44,7 @@ Random fixes waste time and create new bugs. Quick patches mask underlying issue
 NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 ```
 
-If you haven't completed Phase 1, you cannot propose fixes.
+If you have not completed Phase 1, do not propose fixes yet.
 
 ## When to Use
 
@@ -42,6 +67,16 @@ Use for ANY technical issue:
 - Issue seems simple (simple bugs have root causes too)
 - You're in a hurry (rushing guarantees rework)
 - Manager wants it fixed NOW (systematic is faster than thrashing)
+
+## Method
+
+Work in four phases:
+- root cause investigation
+- pattern analysis
+- hypothesis and testing
+- implementation
+
+Return to earlier phases when new evidence contradicts the current theory.
 
 ## The Four Phases
 

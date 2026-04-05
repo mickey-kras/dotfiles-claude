@@ -5,6 +5,30 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 
 # Dispatching Parallel Agents
 
+## Use for
+- 2 or more independent failures or workstreams
+- parallel investigations with no shared state
+- isolated subproblems that can be delegated cleanly
+
+## Do not use for
+- tightly coupled work on the same files or shared state
+- situations where one finding materially changes the others
+
+## Primary users
+- `delivery-orchestrator`
+- `planner`
+- `staff-engineer`
+- `debugger`
+
+## Inputs
+- list of independent problem domains
+- boundaries and constraints for each domain
+
+## Outputs
+- one clean task per agent
+- clear ownership boundaries
+- integration checklist for the returned work
+
 ## Overview
 
 You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your full session context or history. This also preserves your own context for coordination work.
@@ -12,6 +36,14 @@ You delegate tasks to specialized agents with isolated context. By precisely cra
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
 
 **Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
+
+## Method
+
+Use a four-step pattern:
+- identify truly independent domains
+- create focused, self-contained tasks
+- dispatch in parallel
+- review and integrate results carefully
 
 ## When to Use
 
