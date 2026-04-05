@@ -141,6 +141,8 @@ All profiles still keep:
 - `ENABLE_CLAUDEAI_MCP_SERVERS=false`
 - dangerous operation denies like `sudo` and `rm -rf /`
 
+`~/.claude/settings.local.json` is also managed and intentionally reset to a minimal empty override by default. That keeps profile compliance real by removing stale ad hoc local approvals unless you deliberately extend the model to support a small generated local exception set.
+
 `~/.claude/CLAUDE.md` contains lightweight global preferences (Conventional Commits, feature branches, CLI-first workflow), is rendered with your configured display name, explicitly requires MCP-only workflows with no connectors, and explicitly ignores Sentry even if it appears locally.
 
 `~/.codex/AGENTS.md` mirrors those same global preferences for Codex, so both tools behave consistently across machines. Cursor gets the same MCP-only and ignore rules through `~/.cursor/rules/global.mdc`.
@@ -184,6 +186,7 @@ packs/
 dot_claude/
   CLAUDE.md.tmpl                      # -> ~/.claude/CLAUDE.md
   settings.json.tmpl                  # -> ~/.claude/settings.json
+  settings.local.json.tmpl            # -> ~/.claude/settings.local.json
   agents/
     delivery-orchestrator.md          # Request normalization and routing
     planner.md                        # Planning agent
