@@ -25,6 +25,10 @@
 {{- end -}}
 {{- $allow = uniq $allow -}}
 {{- $deny := concat $sharedBans $profileBans | uniq -}}
+{{- $effectiveProfile := $profile -}}
+{{- if eq $profile "custom" -}}
+  {{- $effectiveProfile = .profile_base | default "balanced" -}}
+{{- end -}}
 {
   "permissions": {
     "allow": [
@@ -45,6 +49,10 @@
         {
           "type": "command",
           "command": "node $HOME/.claude/hooks/scripts/block-no-verify.js"
+        },
+        {
+          "type": "command",
+          "command": "node $HOME/.claude/hooks/scripts/governance-capture.js"
         }
       ]
     }{{ if ne $profile "open" }},{{ end }}
@@ -75,6 +83,14 @@
       "hooks": [
         {
           "type": "command",
+          "command": "node $HOME/.claude/hooks/scripts/quality-gate.js"
+        },
+        {
+          "type": "command",
+          "command": "node $HOME/.claude/hooks/scripts/post-edit-format.js"
+        },
+        {
+          "type": "command",
           "command": "node $HOME/.claude/hooks/scripts/suggest-compact.js"
         }
       ]
@@ -82,7 +98,8 @@
   ],
   "env": {
     "EDITOR": "code --wait",
-    "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "false",
+    "DOTFILES_RUNTIME_PROFILE": {{ $effectiveProfile | toJson }}
   },
   "model": "opus"
 }
