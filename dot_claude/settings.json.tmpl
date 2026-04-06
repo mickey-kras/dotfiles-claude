@@ -40,11 +40,40 @@
   },
   "PreToolUse": [
     {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node $HOME/.claude/hooks/scripts/block-no-verify.js"
+        }
+      ]
+    },
+    {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node $HOME/.claude/hooks/scripts/config-protection.js"
+        }
+      ]
+    },
+    {
       "matcher": "Write|Edit|MultiEdit",
       "hooks": [
         {
           "type": "command",
           "command": "python3 $HOME/.claude/hooks/scripts/security-review.py"
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node $HOME/.claude/hooks/scripts/suggest-compact.js"
         }
       ]
     }
