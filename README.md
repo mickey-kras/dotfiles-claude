@@ -220,7 +220,7 @@ dotfiles-update   # Pull, apply, check versions, verify profile-aligned MCPs, se
 
 Installed at `~/.local/bin/dotfiles-update` by chezmoi. Make sure `~/.local/bin` is in your PATH.
 
-On Windows, Git Bash is the primary path. Small `.cmd` wrappers are installed alongside selected helpers for compatibility when a Windows-native launcher invokes them. Git Bash (`bash` in PATH) is still required and comes with [Git for Windows](https://gitforwindows.org).
+On Windows, Git Bash is the supported path. Small `.cmd` wrappers are installed alongside selected helpers for launcher compatibility, but setup and ongoing management are Bash-first. Git Bash (`bash` in PATH) is required and comes with [Git for Windows](https://gitforwindows.org).
 
 For a quick pull-only update: `chezmoi update`
 
@@ -272,17 +272,14 @@ dot_local/
     executable_bw-mcp                 # -> ~/.local/bin/bw-mcp
     executable_bw-mcp.cmd             # -> ~/.local/bin/bw-mcp.cmd (Windows compatibility)
     executable_bw-login               # -> ~/.local/bin/bw-login
-    executable_bw-login.cmd           # -> ~/.local/bin/bw-login.cmd (Windows only)
+    executable_bw-login.cmd           # -> ~/.local/bin/bw-login.cmd
     executable_dotfiles-update        # -> ~/.local/bin/dotfiles-update
-    executable_dotfiles-update.cmd    # -> ~/.local/bin/dotfiles-update.cmd (Windows only)
+    executable_dotfiles-update.cmd    # -> ~/.local/bin/dotfiles-update.cmd
 scripts/
   bootstrap.sh                        # Main setup path for macOS/Linux/WSL/Git Bash
-  bootstrap.ps1                       # Legacy compatibility only
   chezmoi/
     run_onchange_after_configure-global-git-hooks.sh.tmpl   # Unix global Git hook setup
-    run_onchange_after_configure-global-git-hooks.ps1.tmpl  # Legacy Windows global Git hook setup
     run_onchange_after_install-claude-mcps.sh.tmpl          # Authoritative Claude MCP reconciliation
-    run_onchange_after_install-claude-mcps.ps1.tmpl         # Legacy Windows MCP registration
 ```
 
 ## Security
