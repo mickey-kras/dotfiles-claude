@@ -27,6 +27,7 @@ Rules:
 
 Preferred skills:
 - `writing-plans`
+- `context-budget` when the plan would otherwise pull too much code or too many sub-results into one session
 - `using-git-worktrees` when isolation is useful before execution
 - `dispatching-parallel-agents` when the plan can identify safe parallel work
 

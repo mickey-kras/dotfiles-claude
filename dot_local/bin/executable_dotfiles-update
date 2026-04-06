@@ -239,6 +239,20 @@ if command -v claude >/dev/null 2>&1; then
       fail "$mcp - not registered. Run: chezmoi apply"
     fi
   done
+
+  if [ "$MEMORY_PROVIDER" = "obsidian" ]; then
+    OBSIDIAN_VAULT_PATH="$(read_chezmoi_value obsidian_vault_path)"
+    if rg -q "@bitbonsai/mcpvault@latest" "$HOME/.claude.json" "$HOME/Library/Application Support/Claude/claude_desktop_config.json" 2>/dev/null; then
+      ok "claude memory provider rendered as obsidian"
+    else
+      fail "claude memory provider - expected obsidian rendering"
+    fi
+    if [ -n "$OBSIDIAN_VAULT_PATH" ] && rg -q "$OBSIDIAN_VAULT_PATH" "$HOME/.claude.json" "$HOME/Library/Application Support/Claude/claude_desktop_config.json" 2>/dev/null; then
+      ok "claude obsidian vault path"
+    else
+      fail "claude obsidian vault path - missing"
+    fi
+  fi
 else
   warn "claude CLI not found - skipping MCP verification"
 fi
@@ -282,11 +296,19 @@ done
 
 if [ -d "$HOME/.cursor" ] || [ -d "/Applications/Cursor.app" ]; then
   [ -f "$HOME/.cursor/mcp.json" ] && ok "cursor/mcp.json" || fail "cursor/mcp.json - missing"
+  [ -f "$HOME/.cursor/rules/global.mdc" ] && ok "cursor/rules/global.mdc" || fail "cursor/rules/global.mdc - missing"
 fi
 
 if command -v codex >/dev/null 2>&1; then
   [ -f "$HOME/.codex/config.toml" ] && ok "codex/config.toml" || fail "codex/config.toml - missing"
   [ -f "$HOME/.codex/AGENTS.md" ] && ok "codex/AGENTS.md" || fail "codex/AGENTS.md - missing"
+  if [ "$(read_chezmoi_value memory_provider)" = "obsidian" ] && rg -q "@bitbonsai/mcpvault@latest" "$HOME/.codex/config.toml" 2>/dev/null; then
+    ok "codex memory provider rendered as obsidian"
+  fi
+fi
+
+if [ -f "$HOME/.cursor/mcp.json" ] && [ "$(read_chezmoi_value memory_provider)" = "obsidian" ] && rg -q "@bitbonsai/mcpvault@latest" "$HOME/.cursor/mcp.json" 2>/dev/null; then
+  ok "cursor memory provider rendered as obsidian"
 fi
 
 CAPABILITY_PACK="$(read_chezmoi_value capability_pack)"

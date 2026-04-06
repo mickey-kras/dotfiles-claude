@@ -214,6 +214,18 @@ effective_permission_groups() {
   printf "%s\n" "${values[@]}" | unique_words
 }
 
+default_memory_provider_for_profile() {
+  local profile="$1"
+  if [ "$profile" = "restricted" ]; then
+    printf "builtin"
+  else
+    printf "obsidian"
+  fi
+}
+
+EXISTING_MEMORY_PROVIDER="$(detect_existing_value memory_provider)"
+EXISTING_OBSIDIAN_VAULT="$(detect_existing_value obsidian_vault_path)"
+
 if command -v gum >/dev/null 2>&1; then
   printf "${B}Profile Selection${R}\n\n"
   profile_summary restricted
@@ -223,13 +235,14 @@ if command -v gum >/dev/null 2>&1; then
   printf "\n"
   RUNTIME_PROFILE="$(pick_with_gum "Select runtime profile" restricted balanced open custom)"
   CAPABILITY_PACK="$(pick_with_gum "Select capability pack" software-development)"
-  if [ "$RUNTIME_PROFILE" = "restricted" ]; then
-    MEMORY_PROVIDER="$(pick_with_gum "Select memory provider" builtin obsidian)"
-  else
+  DEFAULT_MEMORY_PROVIDER="${EXISTING_MEMORY_PROVIDER:-$(default_memory_provider_for_profile "$RUNTIME_PROFILE")}"
+  if [ "$DEFAULT_MEMORY_PROVIDER" = "obsidian" ]; then
     MEMORY_PROVIDER="$(pick_with_gum "Select memory provider" obsidian builtin)"
+  else
+    MEMORY_PROVIDER="$(pick_with_gum "Select memory provider" builtin obsidian)"
   fi
   if [ "$MEMORY_PROVIDER" = "obsidian" ]; then
-    OBSIDIAN_VAULT_PATH="$(gum input --header "Obsidian vault path")"
+    OBSIDIAN_VAULT_PATH="$(gum input --header "Obsidian vault path" --value "${EXISTING_OBSIDIAN_VAULT:-}")"
   fi
 else
   if [[ "$(uname -s)" == "Darwin" ]] && command -v brew >/dev/null 2>&1; then
@@ -245,22 +258,20 @@ else
   read -r RUNTIME_PROFILE
   [ -z "$RUNTIME_PROFILE" ] && RUNTIME_PROFILE="balanced"
   CAPABILITY_PACK="software-development"
-  if [ "$RUNTIME_PROFILE" = "restricted" ]; then
+  DEFAULT_MEMORY_PROVIDER="${EXISTING_MEMORY_PROVIDER:-$(default_memory_provider_for_profile "$RUNTIME_PROFILE")}"
+  if [ "$DEFAULT_MEMORY_PROVIDER" = "builtin" ]; then
     printf "${B}Memory provider [builtin/obsidian] (default: builtin): ${R}"
   else
     printf "${B}Memory provider [obsidian/builtin] (default: obsidian): ${R}"
   fi
   read -r MEMORY_PROVIDER
   if [ -z "$MEMORY_PROVIDER" ]; then
-    if [ "$RUNTIME_PROFILE" = "restricted" ]; then
-      MEMORY_PROVIDER="builtin"
-    else
-      MEMORY_PROVIDER="obsidian"
-    fi
+    MEMORY_PROVIDER="$DEFAULT_MEMORY_PROVIDER"
   fi
   if [ "$MEMORY_PROVIDER" = "obsidian" ]; then
-    printf "${B}Obsidian vault path: ${R}"
+    printf "${B}Obsidian vault path [%s]: ${R}" "${EXISTING_OBSIDIAN_VAULT}"
     read -r OBSIDIAN_VAULT_PATH
+    [ -z "$OBSIDIAN_VAULT_PATH" ] && OBSIDIAN_VAULT_PATH="$EXISTING_OBSIDIAN_VAULT"
   fi
 fi
 
@@ -320,14 +331,9 @@ if [ -z "$USER_NAME" ]; then
   USER_NAME="$(whoami)"
 fi
 
-EXISTING_MEMORY_PROVIDER="$(detect_existing_value memory_provider)"
-if [ -n "$EXISTING_MEMORY_PROVIDER" ] && [ "$MEMORY_PROVIDER" = "builtin" ]; then
-  MEMORY_PROVIDER="$EXISTING_MEMORY_PROVIDER"
-fi
-
-EXISTING_OBSIDIAN_VAULT="$(detect_existing_value obsidian_vault_path)"
-if [ -n "$EXISTING_OBSIDIAN_VAULT" ] && [ -z "$OBSIDIAN_VAULT_PATH" ]; then
-  OBSIDIAN_VAULT_PATH="$EXISTING_OBSIDIAN_VAULT"
+if [ "$MEMORY_PROVIDER" = "obsidian" ] && [ -z "$OBSIDIAN_VAULT_PATH" ]; then
+  printf "  ${Y}>${R} Obsidian selected without a vault path - falling back to builtin memory\n"
+  MEMORY_PROVIDER="builtin"
 fi
 
 EXISTING_ROLE="$(detect_existing_value user_role_summary)"
