@@ -1,0 +1,34 @@
+---
+description: Git conventions and PR workflow
+globs: ["**/*"]
+---
+
+# Git Workflow
+
+## Commit Messages
+
+Format: `<type>(<scope>): <description>`
+
+Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `ci`
+
+- subject line in imperative mood, ideally under 72 characters
+- body is optional and should explain why, not repeat the diff
+- breaking changes use a `BREAKING CHANGE:` footer
+
+## Branching
+
+- use feature branches, not direct commits to main
+- keep branch names short and descriptive
+- squash-merge pull requests unless there is a specific reason not to
+
+## Pull Requests
+
+- review the complete branch diff, not just the last commit
+- summarize what changed, why, and how it was verified
+- include a test plan when the repo expects one
+
+## Rules
+
+- never force-push to main or master
+- never use `--no-verify`
+- never commit secrets
