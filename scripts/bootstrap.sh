@@ -5,6 +5,7 @@ set -euo pipefail
 # Usage: bash <(curl -sL https://raw.githubusercontent.com/mickey-kras/dotfiles/main/scripts/bootstrap.sh)
 
 REPO="mickey-kras/dotfiles"
+GUM_BIN=""
 
 is_windows_gitbash() {
   case "$(uname -s)" in
@@ -13,24 +14,47 @@ is_windows_gitbash() {
   esac
 }
 
-refresh_path_for_command() {
-  local cmd="$1" resolved="" resolved_dir=""
-  if command -v "$cmd" >/dev/null 2>&1; then
+resolve_gum_bin() {
+  local resolved="" resolved_dir="" candidate=""
+  if command -v gum >/dev/null 2>&1; then
+    GUM_BIN="$(command -v gum)"
     return 0
   fi
 
-  if is_windows_gitbash && command -v where.exe >/dev/null 2>&1; then
-    resolved="$(where.exe "$cmd" 2>/dev/null | tr -d '\r' | head -n1 || true)"
-    if [ -n "$resolved" ]; then
-      resolved_dir="$(dirname "$resolved")"
-      PATH="$resolved_dir:$PATH"
-      export PATH
+  if is_windows_gitbash; then
+    if command -v where.exe >/dev/null 2>&1; then
+      resolved="$(where.exe gum.exe 2>/dev/null | tr -d '\r' | head -n1 || true)"
+      if [ -n "$resolved" ]; then
+        resolved_dir="$(dirname "$resolved")"
+        PATH="$resolved_dir:$PATH"
+        export PATH
+        GUM_BIN="$resolved"
+        return 0
+      fi
     fi
+
+    for candidate in \
+      "${LOCALAPPDATA:-}/Microsoft/WinGet/Links/gum.exe" \
+      "${LOCALAPPDATA:-}/Microsoft/WindowsApps/gum.exe" \
+      "${USERPROFILE:-}/AppData/Local/Microsoft/WinGet/Links/gum.exe" \
+      "${USERPROFILE:-}/AppData/Local/Microsoft/WindowsApps/gum.exe"
+    do
+      if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+        resolved_dir="$(dirname "$candidate")"
+        PATH="$resolved_dir:$PATH"
+        export PATH
+        GUM_BIN="$candidate"
+        return 0
+      fi
+    done
   fi
+
+  GUM_BIN=""
+  return 1
 }
 
 install_gum_if_supported() {
-  if command -v gum >/dev/null 2>&1; then
+  if resolve_gum_bin; then
     return 0
   fi
 
@@ -47,8 +71,7 @@ install_gum_if_supported() {
     sudo dnf install -y gum || true
   fi
 
-  refresh_path_for_command gum
-  if command -v gum >/dev/null 2>&1; then
+  if resolve_gum_bin; then
     printf "  ${G}+${R} gum installed\n"
     return 0
   fi
@@ -194,12 +217,12 @@ profile_summary() {
 
 pick_with_gum() {
   local prompt="$1"; shift
-  gum choose --header "$prompt" "$@"
+  "$GUM_BIN" choose --header "$prompt" "$@"
 }
 
 pick_many_with_gum() {
   local prompt="$1"; shift
-  gum choose --no-limit --header "$prompt" "$@"
+  "$GUM_BIN" choose --no-limit --header "$prompt" "$@"
 }
 
 effective_mcps() {
@@ -270,7 +293,7 @@ EXISTING_OBSIDIAN_VAULT="$(detect_existing_value obsidian_vault_path)"
 
 install_gum_if_supported || true
 
-if command -v gum >/dev/null 2>&1; then
+if [ -n "$GUM_BIN" ]; then
   printf "${B}Profile Selection${R}\n\n"
   profile_summary restricted
   profile_summary balanced
@@ -286,7 +309,7 @@ if command -v gum >/dev/null 2>&1; then
     MEMORY_PROVIDER="$(pick_with_gum "Select memory provider" builtin obsidian)"
   fi
   if [ "$MEMORY_PROVIDER" = "obsidian" ]; then
-    OBSIDIAN_VAULT_PATH="$(gum input --header "Obsidian vault path" --value "${EXISTING_OBSIDIAN_VAULT:-}")"
+    OBSIDIAN_VAULT_PATH="$("$GUM_BIN" input --header "Obsidian vault path" --value "${EXISTING_OBSIDIAN_VAULT:-}")"
   fi
 else
   printf "${B}Runtime profile [restricted/balanced/open/custom] (default: balanced): ${R}"
@@ -319,7 +342,7 @@ case "$RUNTIME_PROFILE" in
 esac
 
 if [ "$RUNTIME_PROFILE" = "custom" ]; then
-  if command -v gum >/dev/null 2>&1; then
+  if [ -n "$GUM_BIN" ]; then
     PROFILE_BASE="$(pick_with_gum "Select custom base profile" restricted balanced open)"
     mapfile -t CUSTOM_ENABLED_MCPS < <(pick_many_with_gum "Select MCPs to enable on top of base profile" "${RESTRICTED_MCPS[@]}" "${BALANCED_EXTRA_MCPS[@]}" "${OPEN_EXTRA_MCPS[@]}" | sort -u)
     mapfile -t CUSTOM_ENABLED_PERMISSION_GROUPS < <(pick_many_with_gum "Select permission groups to enable on top of base profile" \
@@ -350,8 +373,8 @@ detect_existing_name() {
 
 EXISTING_NAME="$(detect_existing_name || true)"
 if [ -n "$EXISTING_NAME" ]; then
-  if command -v gum >/dev/null 2>&1; then
-    if gum confirm "Reuse existing display name '${EXISTING_NAME}'?"; then
+  if [ -n "$GUM_BIN" ]; then
+    if "$GUM_BIN" confirm "Reuse existing display name '${EXISTING_NAME}'?"; then
       USER_NAME="$EXISTING_NAME"
     fi
   else
@@ -364,8 +387,8 @@ if [ -n "$EXISTING_NAME" ]; then
 fi
 
 if [ -z "$USER_NAME" ]; then
-  if command -v gum >/dev/null 2>&1; then
-    USER_NAME="$(gum input --header "Display name for generated instructions" --value "$USER_NAME")"
+  if [ -n "$GUM_BIN" ]; then
+    USER_NAME="$("$GUM_BIN" input --header "Display name for generated instructions" --value "$USER_NAME")"
   else
     printf "${B}Display name for generated instructions: ${R}"
     read -r USER_NAME
@@ -387,8 +410,8 @@ if [ -n "$EXISTING_ROLE" ]; then
 else
   USER_ROLE_SUMMARY="Full-stack software engineer focused on distributed systems, product delivery, and practical AI-assisted development."
 fi
-if command -v gum >/dev/null 2>&1; then
-  USER_ROLE_SUMMARY="$(gum input --header "Role summary" --value "$USER_ROLE_SUMMARY")"
+if [ -n "$GUM_BIN" ]; then
+  USER_ROLE_SUMMARY="$("$GUM_BIN" input --header "Role summary" --value "$USER_ROLE_SUMMARY")"
 else
   printf "${B}Role summary [%s]: ${R}" "$USER_ROLE_SUMMARY"
   read -r ROLE_INPUT
@@ -401,8 +424,8 @@ if [ -n "$EXISTING_STACK" ]; then
 else
   USER_STACK_SUMMARY="C#/.NET, Python, Go, TypeScript, React, Angular; cloud and platform work across Azure, AWS, GCP, Cloudflare, and DigitalOcean."
 fi
-if command -v gum >/dev/null 2>&1; then
-  USER_STACK_SUMMARY="$(gum input --header "Stack summary" --value "$USER_STACK_SUMMARY")"
+if [ -n "$GUM_BIN" ]; then
+  USER_STACK_SUMMARY="$("$GUM_BIN" input --header "Stack summary" --value "$USER_STACK_SUMMARY")"
 else
   printf "${B}Stack summary [%s]: ${R}" "$USER_STACK_SUMMARY"
   read -r STACK_INPUT
@@ -413,8 +436,8 @@ EXISTING_AZDO="$(detect_existing_value azure_devops_org)"
 if [ -n "$EXISTING_AZDO" ]; then
   AZURE_DEVOPS_ORG="$EXISTING_AZDO"
 fi
-if command -v gum >/dev/null 2>&1; then
-  AZURE_DEVOPS_ORG="$(gum input --header "Azure DevOps org name (optional)" --value "$AZURE_DEVOPS_ORG")"
+if [ -n "$GUM_BIN" ]; then
+  AZURE_DEVOPS_ORG="$("$GUM_BIN" input --header "Azure DevOps org name (optional)" --value "$AZURE_DEVOPS_ORG")"
 else
   printf "${B}Azure DevOps org name [%s]: ${R}" "$AZURE_DEVOPS_ORG"
   read -r AZDO_INPUT
@@ -463,8 +486,8 @@ if [ ${#MISSING[@]} -gt 0 ]; then
   fi
 fi
 
-if command -v gum >/dev/null 2>&1; then
-  gum confirm "Apply this profile?" || exit 0
+if [ -n "$GUM_BIN" ]; then
+  "$GUM_BIN" confirm "Apply this profile?" || exit 0
 else
   printf "${B}Apply this profile? [Y/n]: ${R}"
   read -r APPLY_CONFIRM
@@ -528,8 +551,8 @@ if [ "$NEEDS_BITWARDEN" = "true" ]; then
   if ! command -v bw >/dev/null 2>&1; then
     printf "\n${B}Bitwarden CLI required for Bitwarden-backed MCPs${R}\n"
     BW_INSTALL="y"
-    if command -v gum >/dev/null 2>&1; then
-      gum confirm "Install Bitwarden CLI now?" || BW_INSTALL="n"
+    if [ -n "$GUM_BIN" ]; then
+      "$GUM_BIN" confirm "Install Bitwarden CLI now?" || BW_INSTALL="n"
     else
       printf "${B}Install now? [Y/n]: ${R}"
       read -r BW_INSTALL
