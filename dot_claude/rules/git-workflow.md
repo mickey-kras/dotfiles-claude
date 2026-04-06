@@ -7,13 +7,14 @@ globs: ["**/*"]
 
 ## Commit Messages
 
-Format: `<type>(<scope>): <description>`
+Format: `<type>[optional scope]: <description>`
 
 Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `ci`
 
 - subject line in imperative mood, ideally under 72 characters
 - body is optional and should explain why, not repeat the diff
-- breaking changes use a `BREAKING CHANGE:` footer
+- use `feat` for new functionality and `fix` for bug fixes
+- breaking changes use `!` before the `:` or a `BREAKING CHANGE:` footer
 
 ## Branching
 

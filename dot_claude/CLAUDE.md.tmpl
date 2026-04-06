@@ -9,7 +9,9 @@
 ## Workflow
 - "ship it" = commit + push + open PR.
 - Outline the plan before big changes (>3 files).
-- Conventional Commits: `<type>(<scope>): <description>`.
+- Use Conventional Commits: `<type>[optional scope]: <description>`.
+- Use `feat` for new functionality and `fix` for bug fixes.
+- Use `!` before the `:` or a `BREAKING CHANGE:` footer for breaking changes.
 - Feature branches only. Squash-merge PRs.
 - Prefer CLI tools: gh, jq, curl, rg, az, terraform, kubectl, k6.
 - Prefer MCP tools that are available in the current local configuration and allowed by this policy.
