@@ -223,7 +223,11 @@ if command -v gum >/dev/null 2>&1; then
   printf "\n"
   RUNTIME_PROFILE="$(pick_with_gum "Select runtime profile" restricted balanced open custom)"
   CAPABILITY_PACK="$(pick_with_gum "Select capability pack" software-development)"
-  MEMORY_PROVIDER="$(pick_with_gum "Select memory provider" builtin obsidian)"
+  if [ "$RUNTIME_PROFILE" = "restricted" ]; then
+    MEMORY_PROVIDER="$(pick_with_gum "Select memory provider" builtin obsidian)"
+  else
+    MEMORY_PROVIDER="$(pick_with_gum "Select memory provider" obsidian builtin)"
+  fi
   if [ "$MEMORY_PROVIDER" = "obsidian" ]; then
     OBSIDIAN_VAULT_PATH="$(gum input --header "Obsidian vault path")"
   fi
@@ -241,9 +245,19 @@ else
   read -r RUNTIME_PROFILE
   [ -z "$RUNTIME_PROFILE" ] && RUNTIME_PROFILE="balanced"
   CAPABILITY_PACK="software-development"
-  printf "${B}Memory provider [builtin/obsidian] (default: builtin): ${R}"
+  if [ "$RUNTIME_PROFILE" = "restricted" ]; then
+    printf "${B}Memory provider [builtin/obsidian] (default: builtin): ${R}"
+  else
+    printf "${B}Memory provider [obsidian/builtin] (default: obsidian): ${R}"
+  fi
   read -r MEMORY_PROVIDER
-  [ -z "$MEMORY_PROVIDER" ] && MEMORY_PROVIDER="builtin"
+  if [ -z "$MEMORY_PROVIDER" ]; then
+    if [ "$RUNTIME_PROFILE" = "restricted" ]; then
+      MEMORY_PROVIDER="builtin"
+    else
+      MEMORY_PROVIDER="obsidian"
+    fi
+  fi
   if [ "$MEMORY_PROVIDER" = "obsidian" ]; then
     printf "${B}Obsidian vault path: ${R}"
     read -r OBSIDIAN_VAULT_PATH

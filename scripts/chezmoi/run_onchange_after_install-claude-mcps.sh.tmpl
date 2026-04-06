@@ -147,7 +147,8 @@ PY
     print_summary "Will remove:"
   fi
 
-  for name in "${REMOVE_MCP_NAMES[@]}"; do
+  for name in "${REMOVE_MCP_NAMES[@]:-}"; do
+    [ -n "$name" ] || continue
     if claude mcp remove --scope user "$name" >/dev/null 2>&1; then
       echo "  - removed $name"
     else
