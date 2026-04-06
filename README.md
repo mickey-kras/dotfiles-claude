@@ -136,6 +136,7 @@ The `software-development` pack also installs first-party workflow skills into:
 - `~/.codex/skills`
 
 Currently managed:
+- `context7-mcp`
 - `dispatching-parallel-agents`
 - `executing-plans`
 - `receiving-code-review`
@@ -147,6 +148,26 @@ Currently managed:
 - `writing-plans`
 
 These are installed from the first-party source in `packs/software-development/skills`, not from the live Claude plugin cache.
+
+### Intended `~/.claude` layout
+
+The goal is to keep `~/.claude` small and honest: only live configuration and capability surfaces should remain there. Runtime residue like transcripts, caches, telemetry, paste history, shell snapshots, and temporary session state should be disposable.
+
+Keep:
+- `CLAUDE.md`
+- `agents/`
+- `hooks/`
+- `plugins/`
+- `rules/`
+- `skills/`
+- `settings.json`
+- `settings.local.json`
+- `bw-mcp.sh`
+
+Treat everything else as runtime state:
+- safe to recreate
+- safe to clear during cleanup
+- not something to manage in dotfiles
 
 ### Permissions and settings
 
