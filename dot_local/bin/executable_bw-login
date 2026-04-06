@@ -1,93 +1,87 @@
-#!/usr/bin/env node
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
-const readline = require("readline");
-const { spawnSync } = require("child_process");
+#!/usr/bin/env bash
+set -euo pipefail
 
-function fail(message) {
-  console.error(message);
-  process.exit(1);
+fail() {
+  printf '%s\n' "$1" >&2
+  exit 1
 }
 
-function promptHidden(question) {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-
-    rl.stdoutMuted = true;
-    rl._writeToOutput = function writeToOutput(stringToWrite) {
-      if (rl.stdoutMuted) {
-        rl.output.write("*");
-      } else {
-        rl.output.write(stringToWrite);
-      }
-    };
-
-    rl.question(question, (answer) => {
-      rl.history = rl.history.slice(1);
-      rl.output.write("\n");
-      rl.close();
-      resolve(answer);
-    });
-  });
+detect_bw_status() {
+  local json status
+  json="$(bw status 2>/dev/null || true)"
+  status="$(printf '%s' "$json" | tr -d '\r\n ' | sed -n 's/.*"status":"\([^"]*\)".*/\1/p')"
+  if [ -n "$status" ]; then
+    printf '%s' "$status"
+  else
+    printf 'unauthenticated'
+  fi
 }
 
-async function main() {
-  const statusResult = spawnSync("bw", ["status"], {
-    encoding: "utf8",
-    stdio: ["inherit", "pipe", "pipe"]
-  });
-
-  let status = "unauthenticated";
-  if (statusResult.status === 0) {
-    try {
-      status = JSON.parse(statusResult.stdout).status;
-    } catch {
-      status = "unknown";
-    }
-  }
-
-  if (status === "unauthenticated") {
-    console.log("Bitwarden login required.");
-    const loginResult = spawnSync("bw", ["login"], { stdio: "inherit" });
-    if (loginResult.status !== 0) {
-      process.exit(loginResult.status ?? 1);
-    }
-  }
-
-  const existingPassword = process.env.BW_PASSWORD;
-  const masterPassword = existingPassword || (await promptHidden("Bitwarden master password: "));
-  if (!masterPassword) {
-    fail("ERROR: Bitwarden master password is required to unlock the vault.");
-  }
-
-  const unlockResult = spawnSync("bw", ["unlock", "--raw", "--passwordenv", "BW_PASSWORD"], {
-    encoding: "utf8",
-    env: { ...process.env, BW_PASSWORD: masterPassword },
-    stdio: ["inherit", "pipe", "inherit"]
-  });
-  if (unlockResult.status !== 0) {
-    fail("ERROR: Failed to unlock Bitwarden vault. Check your master password and CLI login state.");
-  }
-
-  const session = unlockResult.stdout.trim();
-  if (!session) {
-    fail("ERROR: Bitwarden unlock returned an empty session.");
-  }
-
-  const sessionPath = path.join(os.homedir(), ".bw_session");
-  fs.writeFileSync(sessionPath, `${session}\n`);
-  if (process.platform !== "win32") {
-    try {
-      fs.chmodSync(sessionPath, 0o600);
-    } catch (error) {
-      fail(`ERROR: Failed to secure ${sessionPath}: ${error.message}`);
-    }
-  }
-  console.log(`BW_SESSION saved to ${sessionPath}`);
+prompt_hidden() {
+  local prompt="$1"
+  local stty_state=""
+  printf '%s' "$prompt"
+  stty_state="$(stty -g 2>/dev/null || true)"
+  if [ -n "$stty_state" ]; then
+    stty -echo
+  fi
+  IFS= read -r REPLY
+  if [ -n "$stty_state" ]; then
+    stty "$stty_state"
+  fi
+  printf '\n'
 }
 
-main().catch((error) => fail(`ERROR: ${error.message}`));
+write_session_file() {
+  local session="$1"
+  local session_path="$HOME/.bw_session"
+  printf '%s\n' "$session" > "$session_path"
+  chmod 600 "$session_path" 2>/dev/null || true
+  printf 'BW_SESSION saved to %s\n' "$session_path"
+}
+
+unlock_bw() {
+  local password="${BW_PASSWORD:-}"
+  local session=""
+  local tmpfile=""
+
+  if [ -z "$password" ]; then
+    prompt_hidden "Bitwarden master password: "
+    password="$REPLY"
+  fi
+
+  [ -n "$password" ] || fail "ERROR: Bitwarden master password is required to unlock the vault."
+
+  tmpfile="$(mktemp)"
+  chmod 600 "$tmpfile" 2>/dev/null || true
+  printf '%s\n' "$password" > "$tmpfile"
+
+  if ! session="$(bw unlock --raw --passwordfile "$tmpfile")"; then
+    rm -f "$tmpfile"
+    fail "ERROR: Failed to unlock Bitwarden vault. Check your master password and CLI login state."
+  fi
+
+  rm -f "$tmpfile"
+  [ -n "$session" ] || fail "ERROR: Bitwarden unlock returned an empty session."
+  write_session_file "$session"
+}
+
+main() {
+  local status
+  status="$(detect_bw_status)"
+
+  if [ "$status" = "unauthenticated" ]; then
+    printf 'Bitwarden login required.\n'
+    bw login
+    status="$(detect_bw_status)"
+  fi
+
+  if [ "$status" = "unlocked" ] && [ -n "${BW_SESSION:-}" ]; then
+    write_session_file "$BW_SESSION"
+    exit 0
+  fi
+
+  unlock_bw
+}
+
+main "$@"
