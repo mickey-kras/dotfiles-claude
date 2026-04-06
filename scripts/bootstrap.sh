@@ -211,6 +211,41 @@ if m:
 PY
 }
 
+detect_existing_azdo_org() {
+  local value=""
+  value="$(detect_existing_value azure_devops_org)"
+  if [ -n "$value" ]; then
+    printf "%s" "$value"
+    return 0
+  fi
+
+  python3 - <<'PY' 2>/dev/null || true
+import re
+from pathlib import Path
+
+paths = [
+    Path.home() / ".codex" / "config.toml",
+    Path.home() / ".cursor" / "mcp.json",
+    Path.home() / ".claude.json",
+]
+
+patterns = [
+    re.compile(r'@azure-devops/mcp@[^"]*"\s*,\s*"([^"]+)"'),
+    re.compile(r'"azure-devops"\s*:\s*\{.*?"args"\s*:\s*\[[^\]]*"([^"]+)"\s*\]', re.S),
+]
+
+for path in paths:
+    if not path.exists():
+        continue
+    text = path.read_text(errors="ignore")
+    for pattern in patterns:
+        match = pattern.search(text)
+        if match and match.group(1):
+            print(match.group(1))
+            raise SystemExit(0)
+PY
+}
+
 pad_cell() {
   local width="$1"
   local text="$2"
@@ -564,7 +599,7 @@ else
   [ -n "$STACK_INPUT" ] && USER_STACK_SUMMARY="$STACK_INPUT"
 fi
 
-EXISTING_AZDO="$(detect_existing_value azure_devops_org)"
+EXISTING_AZDO="$(detect_existing_azdo_org)"
 if [ -n "$EXISTING_AZDO" ]; then
   AZURE_DEVOPS_ORG="$EXISTING_AZDO"
 fi
@@ -714,17 +749,28 @@ if [ "$NEEDS_BITWARDEN" = "true" ]; then
       printf "  ${G}+${R} Vault unlocked\n"
 
       # --- Ensure required Bitwarden items exist ---
-      BW_ITEMS=("exa-api-key:Exa:https://exa.ai" "firecrawl-api-key:Firecrawl:https://firecrawl.dev" "fal-api-key:fal.ai:https://fal.ai")
+      BW_ITEMS=()
+      if contains_word exa "${EFFECTIVE_MCPS[@]}"; then
+        BW_ITEMS+=("exa-api-key:Exa:https://exa.ai")
+      fi
+      if contains_word firecrawl "${EFFECTIVE_MCPS[@]}"; then
+        BW_ITEMS+=("firecrawl-api-key:Firecrawl:https://firecrawl.dev")
+      fi
+      if contains_word fal-ai "${EFFECTIVE_MCPS[@]}"; then
+        BW_ITEMS+=("fal-api-key:fal.ai:https://fal.ai")
+      fi
       ITEMS_MISSING=false
-      for entry in "${BW_ITEMS[@]}"; do
-        ITEM_NAME="${entry%%:*}"
-        if ! bw get password "$ITEM_NAME" >/dev/null 2>&1; then
-          ITEMS_MISSING=true
-          break
-        fi
-      done
+      if [ ${#BW_ITEMS[@]} -gt 0 ]; then
+        for entry in "${BW_ITEMS[@]}"; do
+          ITEM_NAME="${entry%%:*}"
+          if ! bw get password "$ITEM_NAME" >/dev/null 2>&1; then
+            ITEMS_MISSING=true
+            break
+          fi
+        done
+      fi
 
-      if [ "$ITEMS_MISSING" = "true" ]; then
+      if [ "$ITEMS_MISSING" = "true" ] && [ ${#BW_ITEMS[@]} -gt 0 ]; then
         printf "\n${B}API key setup${R}\n"
         printf "  ${D}Create free accounts and paste API keys below.${R}\n"
         printf "  ${D}Press Enter to skip any service.${R}\n\n"
