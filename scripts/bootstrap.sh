@@ -256,6 +256,27 @@ render_profile_comparison() {
     "$(pad_cell "$col_w" "high")"
   printf "%s\n" "$sep"
   printf "| %s | %s | %s | %s |\n" \
+    "$(pad_cell "$label_w" "Tooling")" \
+    "$(pad_cell "$col_w" "git, node, npx")" \
+    "$(pad_cell "$col_w" "git, node, npx")" \
+    "$(pad_cell "$col_w" "git, node, npx")"
+  printf "| %s | %s | %s | %s |\n" \
+    "$(pad_cell "$label_w" "")" \
+    "$(pad_cell "$col_w" "bw (if github)")" \
+    "$(pad_cell "$col_w" "bw (if github)")" \
+    "$(pad_cell "$col_w" "bw")"
+  printf "| %s | %s | %s | %s |\n" \
+    "$(pad_cell "$label_w" "")" \
+    "$(pad_cell "$col_w" "")" \
+    "$(pad_cell "$col_w" "docker cli")" \
+    "$(pad_cell "$col_w" "docker cli")"
+  printf "| %s | %s | %s | %s |\n" \
+    "$(pad_cell "$label_w" "")" \
+    "$(pad_cell "$col_w" "")" \
+    "$(pad_cell "$col_w" "")" \
+    "$(pad_cell "$col_w" "uvx")"
+  printf "%s\n" "$sep"
+  printf "| %s | %s | %s | %s |\n" \
     "$(pad_cell "$label_w" "Key MCPs")" \
     "$(pad_cell "$col_w" "github")" \
     "$(pad_cell "$col_w" "github")" \
