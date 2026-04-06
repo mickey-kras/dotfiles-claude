@@ -15,7 +15,7 @@ is_windows_gitbash() {
 }
 
 resolve_gum_bin() {
-  local resolved="" resolved_dir="" candidate=""
+  local resolved="" resolved_dir="" candidate="" search_root=""
   if command -v gum >/dev/null 2>&1; then
     GUM_BIN="$(command -v gum)"
     return 0
@@ -45,6 +45,23 @@ resolve_gum_bin() {
         export PATH
         GUM_BIN="$candidate"
         return 0
+      fi
+    done
+
+    for search_root in \
+      "${LOCALAPPDATA:-}/Microsoft/WinGet/Packages" \
+      "${USERPROFILE:-}/AppData/Local/Microsoft/WinGet/Packages" \
+      "/c/Program Files/WinGet/Packages"
+    do
+      if [ -d "$search_root" ]; then
+        resolved="$(find "$search_root" -type f -iname 'gum.exe' 2>/dev/null | head -n1 || true)"
+        if [ -n "$resolved" ]; then
+          resolved_dir="$(dirname "$resolved")"
+          PATH="$resolved_dir:$PATH"
+          export PATH
+          GUM_BIN="$resolved"
+          return 0
+        fi
       fi
     done
   fi
