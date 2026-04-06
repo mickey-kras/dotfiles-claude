@@ -13,6 +13,50 @@ is_windows_gitbash() {
   esac
 }
 
+refresh_path_for_command() {
+  local cmd="$1" resolved="" resolved_dir=""
+  if command -v "$cmd" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if is_windows_gitbash && command -v where.exe >/dev/null 2>&1; then
+    resolved="$(where.exe "$cmd" 2>/dev/null | tr -d '\r' | head -n1 || true)"
+    if [ -n "$resolved" ]; then
+      resolved_dir="$(dirname "$resolved")"
+      PATH="$resolved_dir:$PATH"
+      export PATH
+    fi
+  fi
+}
+
+install_gum_if_supported() {
+  if command -v gum >/dev/null 2>&1; then
+    return 0
+  fi
+
+  printf "${Y}>${R} Installing gum for interactive setup...\n"
+  if [[ "$(uname -s)" == "Darwin" ]] && command -v brew >/dev/null 2>&1; then
+    brew install gum || true
+  elif is_windows_gitbash && command -v winget.exe >/dev/null 2>&1; then
+    winget.exe install -e --id charmbracelet.gum --accept-package-agreements --accept-source-agreements || true
+  elif is_windows_gitbash && command -v choco >/dev/null 2>&1; then
+    choco install gum -y || true
+  elif command -v pacman >/dev/null 2>&1; then
+    sudo pacman -S --noconfirm gum || true
+  elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y gum || true
+  fi
+
+  refresh_path_for_command gum
+  if command -v gum >/dev/null 2>&1; then
+    printf "  ${G}+${R} gum installed\n"
+    return 0
+  fi
+
+  printf "  ${Y}>${R} gum unavailable - falling back to plain prompts\n"
+  return 1
+}
+
 # --- Colors ---
 C='\033[1;36m'  # cyan
 G='\033[1;32m'  # green
@@ -224,6 +268,8 @@ default_memory_provider_for_profile() {
 EXISTING_MEMORY_PROVIDER="$(detect_existing_value memory_provider)"
 EXISTING_OBSIDIAN_VAULT="$(detect_existing_value obsidian_vault_path)"
 
+install_gum_if_supported || true
+
 if command -v gum >/dev/null 2>&1; then
   printf "${B}Profile Selection${R}\n\n"
   profile_summary restricted
@@ -243,15 +289,6 @@ if command -v gum >/dev/null 2>&1; then
     OBSIDIAN_VAULT_PATH="$(gum input --header "Obsidian vault path" --value "${EXISTING_OBSIDIAN_VAULT:-}")"
   fi
 else
-  if [[ "$(uname -s)" == "Darwin" ]] && command -v brew >/dev/null 2>&1; then
-    printf "${B}Optional dependency${R}\n"
-    printf "  gum provides the richer TUI installer flow.\n"
-    printf "${B}Install gum with Homebrew for future setup runs? [y/N]: ${R}"
-    read -r INSTALL_GUM
-    if [ "$INSTALL_GUM" = "y" ] || [ "$INSTALL_GUM" = "Y" ]; then
-      brew install gum || true
-    fi
-  fi
   printf "${B}Runtime profile [restricted/balanced/open/custom] (default: balanced): ${R}"
   read -r RUNTIME_PROFILE
   [ -z "$RUNTIME_PROFILE" ] && RUNTIME_PROFILE="balanced"
@@ -313,16 +350,26 @@ detect_existing_name() {
 
 EXISTING_NAME="$(detect_existing_name || true)"
 if [ -n "$EXISTING_NAME" ]; then
-  printf "${B}Reuse existing display name '${EXISTING_NAME}'? [Y/n]: ${R}"
-  read -r REUSE_NAME
-  if [ -z "$REUSE_NAME" ] || [ "$REUSE_NAME" = "y" ] || [ "$REUSE_NAME" = "Y" ]; then
-    USER_NAME="$EXISTING_NAME"
+  if command -v gum >/dev/null 2>&1; then
+    if gum confirm "Reuse existing display name '${EXISTING_NAME}'?"; then
+      USER_NAME="$EXISTING_NAME"
+    fi
+  else
+    printf "${B}Reuse existing display name '${EXISTING_NAME}'? [Y/n]: ${R}"
+    read -r REUSE_NAME
+    if [ -z "$REUSE_NAME" ] || [ "$REUSE_NAME" = "y" ] || [ "$REUSE_NAME" = "Y" ]; then
+      USER_NAME="$EXISTING_NAME"
+    fi
   fi
 fi
 
 if [ -z "$USER_NAME" ]; then
-  printf "${B}Display name for generated instructions: ${R}"
-  read -r USER_NAME
+  if command -v gum >/dev/null 2>&1; then
+    USER_NAME="$(gum input --header "Display name for generated instructions" --value "$USER_NAME")"
+  else
+    printf "${B}Display name for generated instructions: ${R}"
+    read -r USER_NAME
+  fi
 fi
 
 if [ -z "$USER_NAME" ]; then
@@ -480,8 +527,13 @@ fi
 if [ "$NEEDS_BITWARDEN" = "true" ]; then
   if ! command -v bw >/dev/null 2>&1; then
     printf "\n${B}Bitwarden CLI required for Bitwarden-backed MCPs${R}\n"
-    printf "${B}Install now? [Y/n]: ${R}"
-    read -r BW_INSTALL
+    BW_INSTALL="y"
+    if command -v gum >/dev/null 2>&1; then
+      gum confirm "Install Bitwarden CLI now?" || BW_INSTALL="n"
+    else
+      printf "${B}Install now? [Y/n]: ${R}"
+      read -r BW_INSTALL
+    fi
     if [ "$BW_INSTALL" != "n" ] && [ "$BW_INSTALL" != "N" ]; then
       if [[ "$(uname -s)" == "Darwin" ]] && command -v brew >/dev/null 2>&1; then
         brew install bitwarden-cli
