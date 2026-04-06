@@ -182,6 +182,10 @@ PY
     add_mcp figma --transport http figma "https://mcp.figma.com/mcp"
   fi
 
+  if contains_name "atlassian" "${EFFECTIVE_MCP_NAMES[@]}"; then
+    add_mcp atlassian --transport http atlassian "https://mcp.atlassian.com/v1/mcp"
+  fi
+
   if contains_name "filesystem" "${EFFECTIVE_MCP_NAMES[@]}"; then
     mkdir -p "$HOME/Dev"
     add_mcp filesystem filesystem -- npx -y @modelcontextprotocol/server-filesystem@2026.1.14 "$HOME/Dev"

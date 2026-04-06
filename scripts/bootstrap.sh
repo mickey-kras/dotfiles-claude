@@ -80,7 +80,7 @@ CUSTOM_ENABLED_PERMISSION_GROUPS=()
 CUSTOM_DISABLED_PERMISSION_GROUPS=()
 
 RESTRICTED_MCPS=(playwright context7 figma filesystem git memory thinking github azure-devops)
-BALANCED_EXTRA_MCPS=(shell docker process terraform kubernetes)
+BALANCED_EXTRA_MCPS=(atlassian shell docker process terraform kubernetes)
 OPEN_EXTRA_MCPS=(http aws tailscale exa firecrawl fal-ai)
 
 RESTRICTED_PERMISSION_GROUPS=(core_read_write shell_readonly git_safe gh_safe)

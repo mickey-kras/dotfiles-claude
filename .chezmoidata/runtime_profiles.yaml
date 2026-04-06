@@ -50,6 +50,7 @@ mcp_sets:
     - playwright
     - context7
     - figma
+    - atlassian
     - filesystem
     - git
     - memory
@@ -65,6 +66,7 @@ mcp_sets:
     - playwright
     - context7
     - figma
+    - atlassian
     - filesystem
     - git
     - memory
@@ -114,6 +116,16 @@ mcp_catalog:
     mutates_local_system: false
     prompt_injection_risk: medium
     notes: Remote design system access.
+  atlassian:
+    transport: http
+    needs_secrets: false
+    reads_remote: true
+    writes_remote: true
+    reads_local: false
+    executes_local_processes: false
+    mutates_local_system: false
+    prompt_injection_risk: medium
+    notes: Official Atlassian Rovo remote MCP for Jira, Confluence, and related cloud context.
   filesystem:
     transport: stdio
     needs_secrets: false

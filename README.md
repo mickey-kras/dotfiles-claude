@@ -76,6 +76,7 @@ All versions are pinned for supply-chain safety. OAuth MCPs authenticate in the 
 | Playwright 0.0.68 | restricted, balanced, open | stdio (npx) | None | medium | Browser automation and E2E testing |
 | Context7 | restricted, balanced, open | Remote HTTP | OAuth | low | Up-to-date library docs and code examples |
 | Figma | restricted, balanced, open | Remote HTTP | OAuth | medium | Design-to-code: layouts, tokens, component variants |
+| Atlassian Rovo MCP | balanced, open | Remote HTTP | OAuth / admin-enabled API token | medium | Official Atlassian cloud context for Jira, Confluence, and related tools |
 | Filesystem 2026.1.14 | restricted, balanced, open | stdio (npx) | None | low | Local file browsing rooted at `~/Dev` |
 | Git 2.10.5 | restricted, balanced, open | stdio (npx) | None | low | Repository history and diff operations |
 | Memory 2026.1.26 | restricted, balanced, open | stdio (npx) | None | low | Local MCP memory store |
