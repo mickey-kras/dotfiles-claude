@@ -27,6 +27,13 @@ globs: ["**/*"]
 - use faster modes for routine edits, structured refactors, and narrow follow-up tasks
 - keep the choice proportional to task ambiguity and risk
 
+Model selection by task type:
+- planning, architecture, security review: strongest model (opus)
+- routine implementation, structured refactors: fast mode or standard
+- verification and review: strongest model (skeptical judgment matters)
+- broad research and exploration: standard or fast (breadth over depth)
+- mechanical transforms (rename, reformat): fast mode
+
 ## Troubleshooting
 
 - read the full error output before proposing fixes

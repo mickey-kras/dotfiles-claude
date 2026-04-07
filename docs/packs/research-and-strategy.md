@@ -1,6 +1,6 @@
 # Research And Strategy Pack Candidate
 
-Status: design-complete backlog candidate
+Status: implemented
 
 ## Primary job
 
@@ -123,7 +123,7 @@ No profile-specific bans beyond the shared set.
 
 ## Implementation decision
 
-Keep this pack as a design-complete candidate. Implement when:
-1. the crawl and search stack passes a focused security review for research workflows
-2. there is concrete user demand beyond what content-creation `campaign` already provides
-3. the pack would not just duplicate content-creation with different labels
+Implemented. The pack was promoted from design-complete to full implementation because:
+1. All MCPs are drawn from the existing approved catalog with no new additions
+2. The research agents and rules provide distinct value beyond content-creation
+3. Evidence-focused workflows (grading, synthesis, uncertainty reporting) do not overlap with editorial workflows

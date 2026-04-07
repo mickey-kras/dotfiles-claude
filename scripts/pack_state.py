@@ -128,6 +128,7 @@ def legacy_config(source_dir, state):
         "obsidian_vault_path": resolved["settings"].get("obsidian_vault_path", ""),
         "azure_devops_org": resolved["settings"].get("azure_devops_org", ""),
         "content_workspace": resolved["settings"].get("content_workspace", ""),
+        "research_workspace": resolved["settings"].get("research_workspace", ""),
         "matched_profile": matched_profile,
     }
 

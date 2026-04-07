@@ -51,6 +51,26 @@ test("software-development balanced renders expected host surfaces", () => {
   assert.ok(claude.permissions.allow.includes("Bash(git *)"));
 });
 
+test("research-and-strategy investigation renders pack-specific outputs", () => {
+  const codex = renderTemplate(path.join(repoRoot, "dot_codex", "config.toml.tmpl"), "research-and-strategy-investigation.json");
+  const cursor = renderTemplate(path.join(repoRoot, "dot_cursor", "mcp.json.tmpl"), "research-and-strategy-investigation.json");
+  const claude = JSON.parse(renderTemplate(path.join(repoRoot, "dot_claude", "settings.json.tmpl"), "research-and-strategy-investigation.json"));
+  const packAssets = renderTemplate(path.join(repoRoot, "scripts", "chezmoi", "run_onchange_after_install-claude-pack-assets.sh.tmpl"), "research-and-strategy-investigation.json");
+
+  assert.match(codex, /\[mcp_servers\.thinking\]/);
+  assert.match(codex, /\[mcp_servers\.context7\]/);
+  assert.doesNotMatch(codex, /\[mcp_servers\.shell\]/);
+  assert.doesNotMatch(codex, /\[mcp_servers\.docker\]/);
+
+  const cursorJson = JSON.parse(cursor);
+  assert.ok(cursorJson.mcpServers["context7"]);
+  assert.ok(cursorJson.mcpServers["thinking"]);
+  assert.equal(claude.env.DOTFILES_RUNTIME_PROFILE, "investigation");
+  assert.ok(claude.permissions.allow.includes("WebSearch"));
+  assert.match(packAssets, /trend-researcher/);
+  assert.match(packAssets, /evidence-over-claims/);
+});
+
 test("content-creation campaign renders pack-specific outputs", () => {
   const codex = renderTemplate(path.join(repoRoot, "dot_codex", "config.toml.tmpl"), "content-creation-campaign.json");
   const cursor = renderTemplate(path.join(repoRoot, "dot_cursor", "mcp.json.tmpl"), "content-creation-campaign.json");

@@ -44,8 +44,16 @@ Do not parallelize when:
 ## Handoff format
 
 When routing between agents, include:
-- Goal: what needs to happen
-- Scope: which files, which systems
-- Constraints: what must not change
+- Goal: one measurable outcome
+- Scope: exact files, systems, or domains in play
+- Constraints: what must not change, what to preserve
 - Context: what has already been tried or decided
-- Verification: how to confirm success
+- Return format: what the agent should report back (not "the fix" but specific deliverables)
+- Verification: exact command or check that proves the goal is met
+
+## Escalation and retry
+
+- if an agent fails to produce useful output, check whether the prompt was too broad
+- narrow the scope and retry before switching agents
+- maximum 3 retries on the same approach before escalating to the user
+- if verification fails, re-plan only the failing part, not the entire phase

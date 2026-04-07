@@ -67,6 +67,18 @@ Good task shape:
 Bad task shape:
 - "Fix all the tests."
 
+## Handoff Format
+
+Each task dispatched to a parallel agent should include:
+- **Scope**: exact files, systems, or domains in play
+- **Goal**: one measurable outcome
+- **Constraints**: what not to touch, what to preserve
+- **Return format**: what the agent should report back (root cause, changes, evidence)
+- **Dependencies**: anything the agent needs to read or check first
+
+This prevents agents from drifting into unrelated work or producing outputs
+that cannot be integrated.
+
 ## Integration Rules
 
 When agents return:

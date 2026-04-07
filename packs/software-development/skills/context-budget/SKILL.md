@@ -62,6 +62,17 @@ When context gets heavy, quality degrades before the model obviously fails. The 
 4. Keep subagent prompts file-based: point to paths, not pasted bodies.
 5. When the session is getting heavy, warn the user and suggest checkpointing or a fresh session.
 
+## Context Cost Awareness
+
+Before reading a file or spawning an agent, estimate the cost:
+- agent definition files: ~2-5KB each, rarely needed for routing
+- skill SKILL.md files: ~130 lines, worth reading for protocol
+- full source files: varies widely, read only the needed section
+- large diffs or logs: summarize or delegate, never inline fully
+
+Prefer file-path references over pasted content in subagent prompts.
+The agent can read the file itself at lower net cost than carrying it in the prompt.
+
 ## Escalation Guidance
 
 - normal: targeted reads, concise summaries, focused prompts

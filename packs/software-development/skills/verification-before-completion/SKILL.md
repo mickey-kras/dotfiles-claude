@@ -72,6 +72,17 @@ Then verify backward from the intended outcome:
 - confirm the evidence actually proves that outcome, not just a nearby proxy
 - if the result intentionally differs from the original target, document the deviation explicitly instead of silently treating it as complete
 
+## Goal-Backward Verification
+
+Task completion is not goal achievement. A placeholder file satisfies "create component"
+but does not satisfy "working component." Always verify backward from the goal:
+
+1. What must be TRUE for the goal to be achieved?
+2. What must EXIST in the codebase for those truths to hold?
+3. What must be WIRED for those artifacts to function together?
+
+Verify each level against the actual codebase, not against task status.
+
 ## Common Failures
 
 | Claim | Requires | Not Sufficient |
