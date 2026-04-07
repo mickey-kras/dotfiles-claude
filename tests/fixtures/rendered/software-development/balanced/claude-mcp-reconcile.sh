@@ -2,24 +2,33 @@
 # Registers and reconciles MCP servers in Claude Code CLI and Claude Desktop App.
 # Idempotent and authoritative: keeps the managed set, removes unmanaged extras.
 #
-# hash: {{ include "dot_cursor/mcp.json.tmpl" | sha256sum }}
+# hash: 0deca84578b3f64609637c90a70f773e9ce2f0570dc3e6f53234292885b3a620
 
 set -euo pipefail
 
 FAILED=0
-HOME_SLASHED="{{ replace "\\" "/" .chezmoi.homeDir }}"
-{{- $runtime := includeTemplate "templates/resolved-state.json" . | fromJson -}}
-{{- $resolved := $runtime.resolved -}}
-RUNTIME_PROFILE="{{ index $runtime "state" "profile" "requested" }}"
-PROFILE_BASE="{{ index $runtime "state" "profile" "selected" }}"
-AZURE_DEVOPS_ORG="{{ index $resolved "settings" "azure_devops_org" }}"
-MEMORY_PROVIDER="{{ index $resolved "settings" "memory_provider" }}"
-OBSIDIAN_VAULT_PATH="{{ index $resolved "settings" "obsidian_vault_path" }}"
+HOME_SLASHED="/Users/mikhailkrasilnikov"RUNTIME_PROFILE="balanced"
+PROFILE_BASE="balanced"
+AZURE_DEVOPS_ORG=""
+MEMORY_PROVIDER="builtin"
+OBSIDIAN_VAULT_PATH=""
 
 DESIRED_MCP_NAMES=(
-{{- range index $resolved "mcps" "enabled" }}
-  "{{ . }}"
-{{- end }}
+  "atlassian"
+  "azure-devops"
+  "context7"
+  "docker"
+  "figma"
+  "filesystem"
+  "git"
+  "github"
+  "kubernetes"
+  "memory"
+  "playwright"
+  "process"
+  "shell"
+  "terraform"
+  "thinking"
 )
 
 to_cli_name() {

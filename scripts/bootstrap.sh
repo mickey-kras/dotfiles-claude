@@ -6,6 +6,10 @@ set -euo pipefail
 
 REPO="mickey-kras/dotfiles"
 GUM_BIN=""
+BOOTSTRAP_SOURCE=""
+BOOTSTRAP_TEMP_SOURCE=""
+STATE_FILE=""
+CONFIG_STATE_JSON=""
 
 is_windows_gitbash() {
   case "$(uname -s)" in
@@ -95,6 +99,30 @@ install_gum_if_supported() {
 
   printf "  ${Y}>${R} gum unavailable - falling back to plain prompts\n"
   return 1
+}
+
+prepare_bootstrap_source() {
+  local script_dir="" repo_root=""
+  script_dir="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+  repo_root="$(CDPATH= cd -- "$script_dir/.." && pwd)"
+  if [ -d "$repo_root/packs" ] && [ -f "$repo_root/scripts/bootstrap-wizard.sh" ]; then
+    BOOTSTRAP_SOURCE="$repo_root"
+    return 0
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    printf "  ${RED}x${R} git is required to load pack metadata for setup.\n"
+    exit 1
+  fi
+
+  BOOTSTRAP_TEMP_SOURCE="$(mktemp -d)"
+  if git clone --depth 1 "https://github.com/${REPO}.git" "$BOOTSTRAP_TEMP_SOURCE" >/dev/null 2>&1; then
+    BOOTSTRAP_SOURCE="$BOOTSTRAP_TEMP_SOURCE"
+    return 0
+  fi
+
+  printf "  ${RED}x${R} Failed to fetch dotfiles source for setup.\n"
+  exit 1
 }
 
 # --- Colors ---
@@ -243,6 +271,90 @@ for path in paths:
         if match and match.group(1):
             print(match.group(1))
             raise SystemExit(0)
+PY
+}
+
+json_value() {
+  local file="$1"
+  local key="$2"
+  python3 - "$file" "$key" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+data = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+value = data[sys.argv[2]]
+if isinstance(value, bool):
+    print("true" if value else "false")
+elif value is None:
+    print("")
+else:
+    print(value)
+PY
+}
+
+json_array_lines() {
+  local file="$1"
+  local key="$2"
+  python3 - "$file" "$key" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+data = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+for item in data.get(sys.argv[2], []):
+    print(item)
+PY
+}
+
+write_chezmoi_config() {
+  python3 - "$CONFIG_STATE_JSON" "$USER_NAME" "$USER_ROLE_SUMMARY" "$USER_STACK_SUMMARY" > "$HOME/.config/chezmoi/chezmoi.toml" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+config = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+config["user_name"] = sys.argv[2]
+config["user_role_summary"] = sys.argv[3]
+config["user_stack_summary"] = sys.argv[4]
+
+order = [
+    "user_name",
+    "user_role_summary",
+    "user_stack_summary",
+    "runtime_profile",
+    "capability_pack",
+    "profile_base",
+    "profile_selected",
+    "profile_mode",
+    "custom_enabled_mcps",
+    "custom_disabled_mcps",
+    "custom_enabled_permission_groups",
+    "custom_disabled_permission_groups",
+    "selection_enabled_mcps",
+    "selection_enabled_skills",
+    "selection_enabled_agents",
+    "selection_enabled_rules",
+    "selection_enabled_permissions",
+    "memory_provider",
+    "obsidian_vault_path",
+    "azure_devops_org",
+    "content_workspace",
+]
+
+def toml_quote(value):
+    return json.dumps(value)
+
+def toml_array(values):
+    return "[" + ",".join(json.dumps(value) for value in values) + "]"
+
+print("[data]")
+for key in order:
+    value = config.get(key, "")
+    if isinstance(value, list):
+        print(f"  {key} = {toml_array(value)}")
+    else:
+        print(f"  {key} = {toml_quote(value)}")
 PY
 }
 
@@ -458,74 +570,33 @@ default_memory_provider_for_profile() {
   fi
 }
 
-EXISTING_MEMORY_PROVIDER="$(detect_existing_value memory_provider)"
-EXISTING_OBSIDIAN_VAULT="$(detect_existing_value obsidian_vault_path)"
-
 install_gum_if_supported || true
+prepare_bootstrap_source
+
+STATE_FILE="$(mktemp)"
+CONFIG_STATE_JSON="$(mktemp)"
 
 if [ -n "$GUM_BIN" ]; then
-  printf "${B}Profile Selection${R}\n\n"
-  render_profile_comparison
-  printf "\n"
-  RUNTIME_PROFILE="$(pick_with_gum "Select runtime profile" restricted balanced open custom)"
-  CAPABILITY_PACK="$(pick_with_gum "Select capability pack" software-development)"
-  DEFAULT_MEMORY_PROVIDER="${EXISTING_MEMORY_PROVIDER:-$(default_memory_provider_for_profile "$RUNTIME_PROFILE")}"
-  if [ "$DEFAULT_MEMORY_PROVIDER" = "obsidian" ]; then
-    MEMORY_PROVIDER="$(pick_with_gum "Select memory provider" obsidian builtin)"
-  else
-    MEMORY_PROVIDER="$(pick_with_gum "Select memory provider" builtin obsidian)"
-  fi
-  if [ "$MEMORY_PROVIDER" = "obsidian" ]; then
-    OBSIDIAN_VAULT_PATH="$("$GUM_BIN" input --header "Obsidian vault path" --value "${EXISTING_OBSIDIAN_VAULT:-}")"
-  fi
+  bash "$BOOTSTRAP_SOURCE/scripts/bootstrap-wizard.sh" --source "$BOOTSTRAP_SOURCE" --state "$STATE_FILE" --gum "$GUM_BIN"
 else
-  printf "${B}Runtime profile [restricted/balanced/open/custom] (default: balanced): ${R}"
-  read -r RUNTIME_PROFILE
-  [ -z "$RUNTIME_PROFILE" ] && RUNTIME_PROFILE="balanced"
-  CAPABILITY_PACK="software-development"
-  DEFAULT_MEMORY_PROVIDER="${EXISTING_MEMORY_PROVIDER:-$(default_memory_provider_for_profile "$RUNTIME_PROFILE")}"
-  if [ "$DEFAULT_MEMORY_PROVIDER" = "builtin" ]; then
-    printf "${B}Memory provider [builtin/obsidian] (default: builtin): ${R}"
-  else
-    printf "${B}Memory provider [obsidian/builtin] (default: obsidian): ${R}"
-  fi
-  read -r MEMORY_PROVIDER
-  if [ -z "$MEMORY_PROVIDER" ]; then
-    MEMORY_PROVIDER="$DEFAULT_MEMORY_PROVIDER"
-  fi
-  if [ "$MEMORY_PROVIDER" = "obsidian" ]; then
-    printf "${B}Obsidian vault path [%s]: ${R}" "${EXISTING_OBSIDIAN_VAULT}"
-    read -r OBSIDIAN_VAULT_PATH
-    [ -z "$OBSIDIAN_VAULT_PATH" ] && OBSIDIAN_VAULT_PATH="$EXISTING_OBSIDIAN_VAULT"
-  fi
+  bash "$BOOTSTRAP_SOURCE/scripts/bootstrap-wizard.sh" --source "$BOOTSTRAP_SOURCE" --state "$STATE_FILE"
 fi
 
-case "$RUNTIME_PROFILE" in
-  restricted|balanced|open|custom) ;;
-  *)
-    printf "  ${Y}>${R} Unknown runtime profile - defaulting to balanced\n"
-    RUNTIME_PROFILE="balanced"
-    ;;
-esac
+python3 "$BOOTSTRAP_SOURCE/scripts/pack_state.py" legacy-config "$BOOTSTRAP_SOURCE" "$STATE_FILE" > "$CONFIG_STATE_JSON"
 
-if [ "$RUNTIME_PROFILE" = "custom" ]; then
-  if [ -n "$GUM_BIN" ]; then
-    PROFILE_BASE="$(pick_with_gum "Select custom base profile" restricted balanced open)"
-    mapfile -t CUSTOM_ENABLED_MCPS < <(pick_many_with_gum "Select MCPs to enable on top of base profile" "${RESTRICTED_MCPS[@]}" "${BALANCED_EXTRA_MCPS[@]}" "${OPEN_EXTRA_MCPS[@]}" | sort -u)
-    mapfile -t CUSTOM_ENABLED_PERMISSION_GROUPS < <(pick_many_with_gum "Select permission groups to enable on top of base profile" \
-      core_read_write shell_readonly git_safe gh_safe git_full gh_full dev_runtime local_file_mutation containers infra_local package_runtime cloud_extended secret_tools web_access | sort -u)
-  else
-    printf "${B}Custom base profile [restricted/balanced/open] (default: balanced): ${R}"
-    read -r PROFILE_BASE
-    [ -z "$PROFILE_BASE" ] && PROFILE_BASE="balanced"
-    printf "${B}Custom enabled MCPs (space-separated, curated catalog only): ${R}"
-    read -r CUSTOM_MCP_INPUT
-    for item in $CUSTOM_MCP_INPUT; do CUSTOM_ENABLED_MCPS+=("$item"); done
-    printf "${B}Custom enabled permission groups (space-separated): ${R}"
-    read -r CUSTOM_PG_INPUT
-    for item in $CUSTOM_PG_INPUT; do CUSTOM_ENABLED_PERMISSION_GROUPS+=("$item"); done
-  fi
-fi
+RUNTIME_PROFILE="$(json_value "$CONFIG_STATE_JSON" runtime_profile)"
+CAPABILITY_PACK="$(json_value "$CONFIG_STATE_JSON" capability_pack)"
+PROFILE_BASE="$(json_value "$CONFIG_STATE_JSON" profile_base)"
+MEMORY_PROVIDER="$(json_value "$CONFIG_STATE_JSON" memory_provider)"
+OBSIDIAN_VAULT_PATH="$(json_value "$CONFIG_STATE_JSON" obsidian_vault_path)"
+AZURE_DEVOPS_ORG="$(json_value "$CONFIG_STATE_JSON" azure_devops_org)"
+CONTENT_WORKSPACE="$(json_value "$CONFIG_STATE_JSON" content_workspace)"
+mapfile -t CUSTOM_ENABLED_MCPS < <(json_array_lines "$CONFIG_STATE_JSON" custom_enabled_mcps)
+mapfile -t CUSTOM_DISABLED_MCPS < <(json_array_lines "$CONFIG_STATE_JSON" custom_disabled_mcps)
+mapfile -t CUSTOM_ENABLED_PERMISSION_GROUPS < <(json_array_lines "$CONFIG_STATE_JSON" custom_enabled_permission_groups)
+mapfile -t CUSTOM_DISABLED_PERMISSION_GROUPS < <(json_array_lines "$CONFIG_STATE_JSON" custom_disabled_permission_groups)
+mapfile -t EFFECTIVE_MCPS < <(json_array_lines "$CONFIG_STATE_JSON" selection_enabled_mcps)
+mapfile -t EFFECTIVE_PERMISSION_GROUPS < <(json_array_lines "$CONFIG_STATE_JSON" selection_enabled_permissions)
 
 detect_existing_name() {
   local file
@@ -610,6 +681,16 @@ else
   read -r AZDO_INPUT
   [ -n "$AZDO_INPUT" ] && AZURE_DEVOPS_ORG="$AZDO_INPUT"
 fi
+python3 - "$CONFIG_STATE_JSON" "$AZURE_DEVOPS_ORG" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["azure_devops_org"] = sys.argv[2]
+path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+PY
 
 printf "\n${B}Planned configuration${R}\n"
 printf "  Runtime profile: ${C}%s${R}\n" "$RUNTIME_PROFILE"
@@ -624,13 +705,14 @@ fi
 if [ -n "$AZURE_DEVOPS_ORG" ]; then
   printf "  Azure DevOps org: ${C}%s${R}\n" "$AZURE_DEVOPS_ORG"
 fi
+if [ -n "$CONTENT_WORKSPACE" ]; then
+  printf "  Content workspace: ${D}%s${R}\n" "$CONTENT_WORKSPACE"
+fi
 if [ "$RUNTIME_PROFILE" = "custom" ]; then
   printf "  Custom base: ${C}%s${R}\n" "$PROFILE_BASE"
   printf "  Custom enabled MCPs: ${D}%s${R}\n" "$(join_by ', ' "${CUSTOM_ENABLED_MCPS[@]}")"
   printf "  Custom enabled permission groups: ${D}%s${R}\n" "$(join_by ', ' "${CUSTOM_ENABLED_PERMISSION_GROUPS[@]}")"
 fi
-mapfile -t EFFECTIVE_MCPS < <(effective_mcps "$RUNTIME_PROFILE" "$PROFILE_BASE")
-mapfile -t EFFECTIVE_PERMISSION_GROUPS < <(effective_permission_groups "$RUNTIME_PROFILE" "$PROFILE_BASE")
 NEEDS_BITWARDEN=false
 if contains_word github "${EFFECTIVE_MCPS[@]}" || contains_word aws "${EFFECTIVE_MCPS[@]}" || contains_word tailscale "${EFFECTIVE_MCPS[@]}" || contains_word exa "${EFFECTIVE_MCPS[@]}" || contains_word firecrawl "${EFFECTIVE_MCPS[@]}" || contains_word fal-ai "${EFFECTIVE_MCPS[@]}"; then
   NEEDS_BITWARDEN=true
@@ -666,22 +748,7 @@ fi
 # --- Write chezmoi config (Bitwarden-backed MCPs disabled for initial apply) ---
 printf "\n${D}Writing chezmoi config...${R}\n"
 mkdir -p ~/.config/chezmoi
-cat > ~/.config/chezmoi/chezmoi.toml <<TOML
-[data]
-  user_name = "${USER_NAME}"
-  user_role_summary = "${USER_ROLE_SUMMARY}"
-  user_stack_summary = "${USER_STACK_SUMMARY}"
-  runtime_profile = "${RUNTIME_PROFILE}"
-  capability_pack = "${CAPABILITY_PACK}"
-  profile_base = "${PROFILE_BASE}"
-  custom_enabled_mcps = [$(for i in "${CUSTOM_ENABLED_MCPS[@]}"; do printf '"%s",' "$i"; done | sed 's/,$//')]
-  custom_disabled_mcps = []
-  custom_enabled_permission_groups = [$(for i in "${CUSTOM_ENABLED_PERMISSION_GROUPS[@]}"; do printf '"%s",' "$i"; done | sed 's/,$//')]
-  custom_disabled_permission_groups = []
-  memory_provider = "${MEMORY_PROVIDER}"
-  obsidian_vault_path = "${OBSIDIAN_VAULT_PATH}"
-  azure_devops_org = "${AZURE_DEVOPS_ORG}"
-TOML
+write_chezmoi_config
 printf "  ${G}+${R} Config saved to ~/.config/chezmoi/chezmoi.toml\n"
 
 # --- Clear stale chezmoi state and source for a clean init ---
@@ -805,22 +872,7 @@ if [ "$NEEDS_BITWARDEN" = "true" ]; then
       fi
 
       # Re-apply without dropping the selected profile state once Bitwarden is ready.
-      cat > ~/.config/chezmoi/chezmoi.toml <<TOML
-[data]
-  user_name = "${USER_NAME}"
-  user_role_summary = "${USER_ROLE_SUMMARY}"
-  user_stack_summary = "${USER_STACK_SUMMARY}"
-  runtime_profile = "${RUNTIME_PROFILE}"
-  capability_pack = "${CAPABILITY_PACK}"
-  profile_base = "${PROFILE_BASE}"
-  custom_enabled_mcps = [$(for i in "${CUSTOM_ENABLED_MCPS[@]}"; do printf '"%s",' "$i"; done | sed 's/,$//')]
-  custom_disabled_mcps = []
-  custom_enabled_permission_groups = [$(for i in "${CUSTOM_ENABLED_PERMISSION_GROUPS[@]}"; do printf '"%s",' "$i"; done | sed 's/,$//')]
-  custom_disabled_permission_groups = []
-  memory_provider = "${MEMORY_PROVIDER}"
-  obsidian_vault_path = "${OBSIDIAN_VAULT_PATH}"
-  azure_devops_org = "${AZURE_DEVOPS_ORG}"
-TOML
+      write_chezmoi_config
       printf "\n${B}Re-applying dotfiles with Bitwarden-backed MCPs...${R}\n"
       chezmoi apply
       printf "  ${G}+${R} Bitwarden-backed MCPs configured\n"

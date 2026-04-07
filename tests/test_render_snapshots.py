@@ -1,0 +1,91 @@
+import unittest
+
+from helpers import load_fixture, render_template
+
+
+PROFILE_CASES = {
+    "restricted": {
+        "runtime_profile": "restricted",
+        "capability_pack": "software-development",
+        "profile_base": "balanced",
+        "custom_enabled_mcps": [],
+        "custom_disabled_mcps": [],
+        "custom_enabled_permission_groups": [],
+        "custom_disabled_permission_groups": [],
+        "memory_provider": "builtin",
+        "obsidian_vault_path": "",
+        "azure_devops_org": "",
+    },
+    "balanced": {
+        "runtime_profile": "balanced",
+        "capability_pack": "software-development",
+        "profile_base": "balanced",
+        "custom_enabled_mcps": [],
+        "custom_disabled_mcps": [],
+        "custom_enabled_permission_groups": [],
+        "custom_disabled_permission_groups": [],
+        "memory_provider": "builtin",
+        "obsidian_vault_path": "",
+        "azure_devops_org": "",
+    },
+    "open": {
+        "runtime_profile": "open",
+        "capability_pack": "software-development",
+        "profile_base": "balanced",
+        "custom_enabled_mcps": [],
+        "custom_disabled_mcps": [],
+        "custom_enabled_permission_groups": [],
+        "custom_disabled_permission_groups": [],
+        "memory_provider": "builtin",
+        "obsidian_vault_path": "",
+        "azure_devops_org": "",
+    },
+    "custom-balanced": {
+        "runtime_profile": "custom",
+        "capability_pack": "software-development",
+        "profile_base": "balanced",
+        "custom_enabled_mcps": ["exa"],
+        "custom_disabled_mcps": ["docker"],
+        "custom_enabled_permission_groups": ["web_access"],
+        "custom_disabled_permission_groups": ["containers"],
+        "memory_provider": "obsidian",
+        "obsidian_vault_path": "/Users/mikhailkrasilnikov/Notes",
+        "azure_devops_org": "acme-platform",
+    },
+    "content-studio": {
+        "runtime_profile": "studio",
+        "capability_pack": "content-creation",
+        "profile_base": "studio",
+        "custom_enabled_mcps": [],
+        "custom_disabled_mcps": [],
+        "custom_enabled_permission_groups": [],
+        "custom_disabled_permission_groups": [],
+        "memory_provider": "builtin",
+        "obsidian_vault_path": "",
+        "content_workspace": "/Users/mikhailkrasilnikov/Content",
+        "azure_devops_org": "",
+    },
+}
+
+SNAPSHOTS = {
+    "dot_claude/settings.json.tmpl": "claude-settings.json",
+    "dot_codex/config.toml.tmpl": "codex-config.toml",
+    "dot_cursor/mcp.json.tmpl": "cursor-mcp.json",
+    "scripts/chezmoi/run_onchange_after_install-claude-mcps.sh.tmpl": "claude-mcp-reconcile.sh",
+}
+
+
+class RenderSnapshotTests(unittest.TestCase):
+    def test_snapshots_match_current_templates(self):
+        for case_name, override_data in PROFILE_CASES.items():
+            for template_path, fixture_name in SNAPSHOTS.items():
+                with self.subTest(case=case_name, template=template_path):
+                    actual = render_template(template_path, override_data)
+                    expected = load_fixture(
+                        f"tests/fixtures/rendered/software-development/{case_name}/{fixture_name}"
+                    )
+                    self.assertEqual(actual, expected)
+
+
+if __name__ == "__main__":
+    unittest.main()

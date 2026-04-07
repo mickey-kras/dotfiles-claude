@@ -1,20 +1,37 @@
-{{- $runtime := includeTemplate "templates/resolved-state.json" . | fromJson -}}
-{{- $state := $runtime.state -}}
-{{- $resolved := $runtime.resolved -}}
-{{- $requestedProfile := index $state "profile" "requested" -}}
-{{- $allow := index $resolved "permissions" "allow" | default (list) -}}
-{{- $deny := index $resolved "permissions" "deny" | default (list) -}}
 {
   "permissions": {
     "allow": [
-{{- range $i, $entry := $allow }}
-      {{ $entry | toJson }}{{ if lt (add1 $i) (len $allow) }},{{ end }}
-{{- end }}
+      "Bash(cat *)",
+      "Bash(chmod +x *)",
+      "Bash(cp *)",
+      "Bash(find *)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git status*)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(jq *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(mv *)",
+      "Bash(node *)",
+      "Bash(npx *)",
+      "Bash(python3 *)",
+      "Bash(rg *)",
+      "Bash(tail *)",
+      "Bash(touch *)",
+      "Bash(wc *)",
+      "Edit",
+      "Read",
+      "Write"
     ],
     "deny": [
-{{- range $i, $entry := $deny }}
-      {{ $entry | toJson }}{{ if lt (add1 $i) (len $deny) }},{{ end }}
-{{- end }}
+      "Bash(\u003e /dev/sda*)",
+      "Bash(chmod 777 *)",
+      "Bash(dd if=/dev/zero*)",
+      "Bash(rm -rf /)",
+      "Bash(su *)",
+      "Bash(sudo *)"
     ]
   },
   "PreToolUse": [
@@ -30,8 +47,7 @@
           "command": "node $HOME/.claude/hooks/scripts/governance-capture.js"
         }
       ]
-    }{{ if ne $requestedProfile "open" }},{{ end }}
-{{- if ne $requestedProfile "open" }}
+    },
     {
       "matcher": "Write|Edit",
       "hooks": [
@@ -41,7 +57,6 @@
         }
       ]
     },
-{{- end }}
     {
       "matcher": "Write|Edit|MultiEdit",
       "hooks": [
@@ -74,7 +89,7 @@
   "env": {
     "EDITOR": "code --wait",
     "ENABLE_CLAUDEAI_MCP_SERVERS": "false",
-    "DOTFILES_RUNTIME_PROFILE": {{ index $resolved "profile_basis" | toJson }}
+    "DOTFILES_RUNTIME_PROFILE": "studio"
   },
   "model": "opus"
 }

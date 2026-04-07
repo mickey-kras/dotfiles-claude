@@ -1,20 +1,45 @@
-{{- $runtime := includeTemplate "templates/resolved-state.json" . | fromJson -}}
-{{- $state := $runtime.state -}}
-{{- $resolved := $runtime.resolved -}}
-{{- $requestedProfile := index $state "profile" "requested" -}}
-{{- $allow := index $resolved "permissions" "allow" | default (list) -}}
-{{- $deny := index $resolved "permissions" "deny" | default (list) -}}
 {
   "permissions": {
     "allow": [
-{{- range $i, $entry := $allow }}
-      {{ $entry | toJson }}{{ if lt (add1 $i) (len $allow) }},{{ end }}
-{{- end }}
+      "Bash(az *)",
+      "Bash(cat *)",
+      "Bash(chmod +x *)",
+      "Bash(cp *)",
+      "Bash(curl *)",
+      "Bash(dotnet *)",
+      "Bash(find *)",
+      "Bash(gh *)",
+      "Bash(git *)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(jq *)",
+      "Bash(k6 *)",
+      "Bash(kubectl *)",
+      "Bash(ls *)",
+      "Bash(make *)",
+      "Bash(mkdir *)",
+      "Bash(mv *)",
+      "Bash(node *)",
+      "Bash(pytest *)",
+      "Bash(python3 *)",
+      "Bash(rg *)",
+      "Bash(tail *)",
+      "Bash(terraform *)",
+      "Bash(touch *)",
+      "Bash(wc *)",
+      "Edit",
+      "Read",
+      "WebFetch",
+      "WebSearch",
+      "Write"
     ],
     "deny": [
-{{- range $i, $entry := $deny }}
-      {{ $entry | toJson }}{{ if lt (add1 $i) (len $deny) }},{{ end }}
-{{- end }}
+      "Bash(\u003e /dev/sda*)",
+      "Bash(chmod 777 *)",
+      "Bash(dd if=/dev/zero*)",
+      "Bash(rm -rf /)",
+      "Bash(su *)",
+      "Bash(sudo *)"
     ]
   },
   "PreToolUse": [
@@ -30,8 +55,7 @@
           "command": "node $HOME/.claude/hooks/scripts/governance-capture.js"
         }
       ]
-    }{{ if ne $requestedProfile "open" }},{{ end }}
-{{- if ne $requestedProfile "open" }}
+    },
     {
       "matcher": "Write|Edit",
       "hooks": [
@@ -41,7 +65,6 @@
         }
       ]
     },
-{{- end }}
     {
       "matcher": "Write|Edit|MultiEdit",
       "hooks": [
@@ -74,7 +97,7 @@
   "env": {
     "EDITOR": "code --wait",
     "ENABLE_CLAUDEAI_MCP_SERVERS": "false",
-    "DOTFILES_RUNTIME_PROFILE": {{ index $resolved "profile_basis" | toJson }}
+    "DOTFILES_RUNTIME_PROFILE": "balanced"
   },
   "model": "opus"
 }
