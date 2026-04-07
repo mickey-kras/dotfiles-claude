@@ -96,6 +96,35 @@ CONTENT_PROFILE_CASES = {
     },
 }
 
+RESEARCH_PROFILE_CASES = {
+    "research-desk": {
+        "runtime_profile": "desk",
+        "capability_pack": "research-and-strategy",
+        "profile_base": "desk",
+        "custom_enabled_mcps": [],
+        "custom_disabled_mcps": [],
+        "custom_enabled_permission_groups": [],
+        "custom_disabled_permission_groups": [],
+        "memory_provider": "builtin",
+        "obsidian_vault_path": "",
+        "research_workspace": "",
+        "azure_devops_org": "",
+    },
+    "research-investigation": {
+        "runtime_profile": "investigation",
+        "capability_pack": "research-and-strategy",
+        "profile_base": "investigation",
+        "custom_enabled_mcps": [],
+        "custom_disabled_mcps": [],
+        "custom_enabled_permission_groups": [],
+        "custom_disabled_permission_groups": [],
+        "memory_provider": "builtin",
+        "obsidian_vault_path": "",
+        "research_workspace": "/Users/mikhailkrasilnikov/Research",
+        "azure_devops_org": "",
+    },
+}
+
 SNAPSHOTS = {
     "dot_claude/settings.json.tmpl": "claude-settings.json",
     "dot_codex/config.toml.tmpl": "codex-config.toml",
@@ -103,7 +132,7 @@ SNAPSHOTS = {
     "scripts/chezmoi/run_onchange_after_install-claude-mcps.sh.tmpl": "claude-mcp-reconcile.sh",
 }
 
-ALL_CASES = {**PROFILE_CASES, **CONTENT_PROFILE_CASES}
+ALL_CASES = {**PROFILE_CASES, **CONTENT_PROFILE_CASES, **RESEARCH_PROFILE_CASES}
 
 
 class RenderSnapshotTests(unittest.TestCase):

@@ -37,13 +37,19 @@ Ask follow-up questions only when the missing information changes implementation
 If the task can proceed safely with a reasonable assumption, state the assumption and continue.
 
 Execution brief format:
-- Goal
-- Scope
-- Constraints
-- Risks
-- Needed agent or agent sequence
-- Expected output
-- Verification
+- Goal: one measurable outcome
+- Scope: exact files, systems, or domains in play
+- Constraints: what not to touch, what to preserve, deadlines
+- Risks: what could go wrong and how to detect it
+- Needed agent or agent sequence: who does what, in what order
+- Expected output: what the agent returns (not "the fix" but "root cause, changes, evidence")
+- Verification: exact command or check that proves the goal is met
+
+Routing discipline:
+- no phase or handoff advances without passing its quality gate
+- every handoff carries full context; no agent starts cold
+- independent workstreams run in parallel to compress timelines
+- evidence over claims: all quality assessments require proof, not assertions
 
 When not to use this agent:
 - direct coding task with clear scope and clear owner

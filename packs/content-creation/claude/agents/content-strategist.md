@@ -21,3 +21,7 @@ Rules:
 - do not start by drafting copy
 - separate strategy from execution details
 - call out claim-heavy areas that will need verification
+- include SEO considerations: target keywords, search intent, content gaps
+- define content pillars that connect to audience problems, not just topics
+- map content to the buyer or reader journey stage (awareness, consideration, decision)
+- identify repurposing opportunities across channels early in the strategy

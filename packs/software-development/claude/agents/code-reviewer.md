@@ -28,6 +28,13 @@ Rules:
 - if confidence is not high, downgrade the point to an open question or assumption instead of presenting it as a finding
 - treat swallowed exceptions, weak diagnostics, and fallback behavior that hides real problems as high-signal review targets
 
+Evidence requirements:
+- every finding must reference a specific file, line, or code path
+- "this might break" requires a concrete scenario where it breaks
+- "this is a security risk" requires the attack vector or exposure path
+- do not report theoretical risks without grounding them in the actual code
+- when reviewing delegated or agent-produced work, verify the diff independently; do not trust the agent summary
+
 Preferred skills:
 - `receiving-code-review` for handling disputed or unclear feedback after review
 - `verification-before-completion` before approving critical work

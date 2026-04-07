@@ -188,10 +188,67 @@ test("content-creation validates unknown MCP reference", () => {
   assert.ok(result.errors.some((e) => e.includes("nonexistent-mcp")));
 });
 
+// --- Research-and-strategy pack tests ---
+
+const researchPack = loadPack(repoRoot, "research-and-strategy");
+
+test("loads the research-and-strategy pack", () => {
+  assert.equal(researchPack.id, "research-and-strategy");
+  assert.equal(researchPack.defaults.profile, "analyst");
+  assert.ok(researchPack.profiles.desk);
+  assert.ok(researchPack.profiles.analyst);
+  assert.ok(researchPack.profiles.investigation);
+  assert.ok(researchPack.catalogs.mcps.thinking);
+});
+
+test("research-and-strategy profiles match their names after normalization", () => {
+  for (const profileId of Object.keys(researchPack.profiles)) {
+    const selection = getProfileSelection(researchPack, profileId);
+    assert.equal(matchProfile(researchPack, selection), profileId, `profile ${profileId} should match itself`);
+  }
+});
+
+test("research-and-strategy desk profile has no high-risk MCPs", () => {
+  const desk = getProfileSelection(researchPack, "desk");
+  const highRisk = ["http", "exa", "firecrawl"];
+  for (const mcp of highRisk) {
+    assert.ok(!desk.mcps.enabled.includes(mcp), `desk should not include ${mcp}`);
+  }
+});
+
+test("research-and-strategy investigation has search and crawl MCPs", () => {
+  const investigation = getProfileSelection(researchPack, "investigation");
+  assert.ok(investigation.mcps.enabled.includes("exa"));
+  assert.ok(investigation.mcps.enabled.includes("firecrawl"));
+  assert.ok(investigation.mcps.enabled.includes("http"));
+});
+
+test("research-and-strategy resolves state with visible_if for obsidian", () => {
+  const resolved = resolveState(researchPack, {
+    pack_id: "research-and-strategy",
+    profile: { selected: "analyst", mode: "preset" },
+    selection: {
+      ...getProfileSelection(researchPack, "analyst"),
+      settings: { memory_provider: "obsidian", obsidian_vault_path: "/vault", research_workspace: "" }
+    }
+  });
+
+  assert.equal(resolved.resolved.settings.obsidian_vault_path, "/vault");
+  assert.equal(resolved.profile.mode, "custom");
+});
+
+test("research-and-strategy validates unknown MCP reference", () => {
+  const result = validateSelection(researchPack, {
+    mcps: { enabled: ["nonexistent-mcp"] },
+    settings: { memory_provider: "builtin" }
+  });
+  assert.ok(result.errors.some((e) => e.includes("nonexistent-mcp")));
+});
+
 // --- Cross-pack tests ---
 
 test("all packs have matching tooling agents and catalog agents", () => {
-  for (const p of [pack, contentPack]) {
+  for (const p of [pack, contentPack, researchPack]) {
     const catalogAgents = Object.keys(p.catalogs.agents).sort();
     const toolingAgents = [...p.tooling.claude_agents].sort();
     assert.deepEqual(toolingAgents, catalogAgents, `${p.id} tooling agents should match catalog`);
@@ -199,7 +256,7 @@ test("all packs have matching tooling agents and catalog agents", () => {
 });
 
 test("all packs have matching tooling skills and catalog skills", () => {
-  for (const p of [pack, contentPack]) {
+  for (const p of [pack, contentPack, researchPack]) {
     const catalogSkills = Object.keys(p.catalogs.skills).sort();
     const toolingSkills = [...p.tooling.managed_skills].sort();
     assert.deepEqual(toolingSkills, catalogSkills, `${p.id} tooling skills should match catalog`);
@@ -207,7 +264,7 @@ test("all packs have matching tooling skills and catalog skills", () => {
 });
 
 test("all profiles reference only valid catalog items", () => {
-  for (const p of [pack, contentPack]) {
+  for (const p of [pack, contentPack, researchPack]) {
     for (const [profileId, profile] of Object.entries(p.profiles)) {
       const validation = validateSelection(p, profile.selection);
       assert.deepEqual(validation.errors, [], `${p.id}/${profileId} should have no validation errors`);

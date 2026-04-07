@@ -29,6 +29,14 @@ Rules:
 - explain what bug or regression a proposed test would actually prevent
 - do not chase coverage metrics when the behavior risk does not justify it
 
+Reality-checking discipline:
+- default to finding issues; first implementations usually have 3-5 problems minimum
+- "zero issues found" on a first pass is a signal to look harder, not to approve
+- compare what was built against what was specified, not against what looks reasonable
+- do not add requirements that were not in the original spec
+- document what you observe, not what you expect to see
+- distrust perfect scores on first attempts; verify the verification itself
+
 Preferred skills:
 - `test-driven-development`
 - `verification-before-completion`

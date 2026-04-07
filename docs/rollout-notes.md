@@ -6,36 +6,67 @@ Branch: `feat/pack-first-dotfiles`
 
 ### Architecture
 
-The dotfiles moved from a global profile model to a **pack-first capability architecture**. Each pack (`software-development`, `content-creation`) owns its profiles, MCP catalog, agents, rules, skills, permissions, and settings. A shared resolver (`templates/resolved-state.json`) normalizes selections and feeds all host templates (Claude Code, Claude Desktop, Cursor, Codex) from one resolved state.
+The dotfiles moved from a global profile model to a **pack-first capability architecture**. Each pack owns its profiles, MCP catalog, agents, rules, skills, permissions, and settings. A shared resolver (`templates/resolved-state.json`) normalizes selections and feeds all host templates (Claude Code, Claude Desktop, Cursor, Codex) from one resolved state.
 
-### New pack: content-creation
+### Three-pack system
 
-Added `content-creation` with three profiles:
-- `focused` -- low-risk writing and synthesis
-- `studio` (default) -- structured research and editorial iteration
-- `campaign` -- broader search, crawl, and image generation for trusted machines
+| Pack | Profiles | Purpose |
+| --- | --- | --- |
+| software-development | restricted, balanced, open | Software delivery across planning, implementation, testing, review, docs, and incident response |
+| content-creation | focused, studio, campaign | Editorial, research, brand, and visual-production for writing and creative execution |
+| research-and-strategy | desk, analyst, investigation | Evidence gathering, source synthesis, strategic recommendation, and executive reporting |
+
+### New pack: research-and-strategy
+
+Added `research-and-strategy` with three profiles:
+- `desk` -- low-risk reading and local synthesis
+- `analyst` (default) -- broader investigation with browser and process tools
+- `investigation` -- wider crawling and search for trusted machines
+
+5 agents: trend-researcher, competitive-analyst, evidence-reviewer, report-writer, executive-summary-writer
+4 rules: evidence-over-claims, uncertainty-reporting, citation-discipline, report-structure
+4 skills: context-budget, obsidian-memory, writing-plans, verification-before-completion
+3 playbooks: research-intake, evidence-matrix, executive-summary
+
+### Productivity enhancements
+
+Patterns adapted from GSD (get-shit-done) and agency-agents reference sources:
+- **Context cost awareness**: context-budget skill enhanced with file cost estimation guidance
+- **Goal-backward verification**: verification-before-completion skill enhanced to verify backward from outcomes, not just forward from tasks
+- **Handoff discipline**: dispatching-parallel-agents skill enhanced with structured handoff format
+- **Model selection guidance**: performance rule enhanced with task-to-model mapping
+- **Reality-checking discipline**: quality-engineer agent enhanced with evidence-collector skepticism patterns
+- **Evidence requirements**: code-reviewer agent enhanced with structured evidence rules
+- **Routing discipline**: delivery-orchestrator agent enhanced with NEXUS quality-gate and handoff patterns
+
+### Content-creation enhancements
+
+- content-strategist: SEO awareness, content pillars, reader journey mapping
+- channel-adaptation-editor: platform-specific guidance (LinkedIn, Twitter, blog, email, video)
+- editorial-reviewer: structured review checklist with evidence discipline
+- campaign-build playbook: research-first methodology, repurposing paths
 
 ### Bootstrap wizard
 
-The installer (`scripts/bootstrap-wizard.sh`) now shows a styled configuration summary with MCP counts, skill counts, agent counts, and warnings for secret-backed or high-injection-risk MCPs. Dead legacy code (~400 lines of hardcoded arrays and unused helpers) was removed from `scripts/bootstrap.sh`.
+The installer (`scripts/bootstrap-wizard.sh`) now discovers all 3 packs automatically. No code changes needed -- the wizard was already pack-generic. The `pack_state.py` helper now includes `research_workspace` in legacy config output.
 
 ### Documentation
 
-- `packs/software-development/docs/quickstart.md` -- rewritten with profile table, model guidance, key skills, and playbook links
-- `packs/software-development/docs/playbooks/orchestration.md` -- agent routing, parallel work rules, context discipline, handoff format
-- `packs/software-development/docs/playbooks/health-check.md` -- quick verification commands and common issue table
-- `docs/packs/research-and-strategy.md` -- design-complete spec with profiles, agents, rules, settings, guardrails, and implementation criteria
-- `docs/security/CONTRIBUTING.md` -- 10-dimension MCP evaluation rubric and step-by-step contribution process
+- `packs/research-and-strategy/docs/quickstart.md` -- profile table, agent list, model guidance, playbook links
+- `packs/research-and-strategy/docs/playbooks/` -- research-intake, evidence-matrix, executive-summary
+- `docs/security/mcp-decisions/research-and-strategy.md` -- per-profile MCP decisions
+- `research/` -- analysis documents for effective-claude, GSD, agency-agents reference sources
+- `phases/` -- phase documents for the transformation plan
 
 ### Security
 
-Every MCP candidate has a recorded decision in `docs/security/mcp-decisions/`. The new CONTRIBUTING.md formalizes the evaluation process for future candidates. No new MCPs were added without review. Sentry remains excluded.
+Every MCP in the new pack is drawn from the existing approved catalog. No new MCPs were introduced. The `docs/security/mcp-decisions.md` table updated from "candidate" to actual placement for all research-and-strategy MCPs. Sentry remains excluded.
 
 ### Tests
 
-- 19 JavaScript tests covering pack loading, profile matching, validation, cross-pack consistency, and fixture rendering
-- 6 Python snapshot tests covering rendered output for both packs across all profiles
-- All 25 tests pass
+- 26 JavaScript tests covering pack loading, profile matching, validation, cross-pack consistency, and fixture rendering for all 3 packs
+- 6 Python tests covering schema validation, rendered-output snapshots (36 template x profile combinations), and runtime parity
+- All 32 tests pass
 
 ## Upgrade path
 
@@ -78,7 +109,7 @@ git checkout main
 chezmoi apply
 ```
 
-This restores the pre-pack-first configuration. The `.chezmoidata/` files still contain the legacy profile definitions for backward compatibility.
+This restores the pre-pack-first configuration.
 
 ### Partial rollback (keep pack-first, revert specific changes)
 
@@ -90,7 +121,8 @@ chezmoi apply
 
 ## Residual risks
 
-- **Legacy data files**: `.chezmoidata/capability_packs.yaml` and `.chezmoidata/runtime_profiles.yaml` are kept for parity testing only. They should be removed once the branch is validated on all machines and merged.
-- **research-and-strategy pack**: Design-complete but not implemented. Requires a focused security review of crawl/search MCPs before activation.
-- **Obsidian memory**: The `visible_if` gating in pack.yaml relies on `memory_provider == "obsidian"` in chezmoi data. If data is missing, the MCP is silently excluded (safe default).
+- **Legacy data files**: `.chezmoidata/` files kept for parity testing only. Remove after branch is validated on all machines and merged.
+- **Obsidian memory**: `visible_if` gating relies on `memory_provider == "obsidian"` in chezmoi data. Missing data silently excludes the MCP (safe default).
 - **Bitwarden session**: Secret-backed MCPs fail silently if `~/.bw_session` is stale. The health-check playbook documents the fix.
+- **Research pack web MCPs**: http, exa, firecrawl carry high prompt-injection risk. Gated to `investigation` profile only, for trusted personal machines.
+- **Research pack maturity**: New pack has not been validated in production use. Agents and rules may need tuning after real-world usage.
