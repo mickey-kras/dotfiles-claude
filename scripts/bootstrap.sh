@@ -185,18 +185,11 @@ USER_ROLE_SUMMARY=""
 USER_STACK_SUMMARY=""
 MEMORY_PROVIDER="builtin"
 OBSIDIAN_VAULT_PATH=""
+CONTENT_WORKSPACE=""
 CUSTOM_ENABLED_MCPS=()
 CUSTOM_DISABLED_MCPS=()
 CUSTOM_ENABLED_PERMISSION_GROUPS=()
 CUSTOM_DISABLED_PERMISSION_GROUPS=()
-
-RESTRICTED_MCPS=(playwright context7 figma filesystem git memory thinking github azure-devops)
-BALANCED_EXTRA_MCPS=(atlassian shell docker process terraform kubernetes)
-OPEN_EXTRA_MCPS=(http aws tailscale exa firecrawl fal-ai)
-
-RESTRICTED_PERMISSION_GROUPS=(core_read_write shell_readonly git_safe gh_safe)
-BALANCED_EXTRA_PERMISSION_GROUPS=(git_full gh_full dev_runtime local_file_mutation containers infra_local)
-OPEN_EXTRA_PERMISSION_GROUPS=(package_runtime cloud_extended secret_tools web_access)
 
 join_by() {
   local delim="$1"; shift
@@ -218,10 +211,6 @@ contains_word() {
     [ "$item" = "$needle" ] && return 0
   done
   return 1
-}
-
-unique_words() {
-  awk '!seen[$0]++'
 }
 
 detect_existing_value() {
@@ -356,218 +345,6 @@ for key in order:
     else:
         print(f"  {key} = {toml_quote(value)}")
 PY
-}
-
-pad_cell() {
-  local width="$1"
-  local text="$2"
-  printf "%-*s" "$width" "$text"
-}
-
-render_profile_comparison() {
-  local label_w=14
-  local col_w=20
-  local sep="+-$(printf '%*s' "$label_w" '' | tr ' ' '-')-+-$(printf '%*s' "$col_w" '' | tr ' ' '-')-+-$(printf '%*s' "$col_w" '' | tr ' ' '-')-+-$(printf '%*s' "$col_w" '' | tr ' ' '-')-+"
-
-  printf "%s\n" "$sep"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "restricted")" \
-    "$(pad_cell "$col_w" "balanced")" \
-    "$(pad_cell "$col_w" "open")"
-  printf "%s\n" "$sep"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "Summary")" \
-    "$(pad_cell "$col_w" "Remote work only")" \
-    "$(pad_cell "$col_w" "Practical local dev")" \
-    "$(pad_cell "$col_w" "Broadest access")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "Local exec")" \
-    "$(pad_cell "$col_w" "no")" \
-    "$(pad_cell "$col_w" "yes")" \
-    "$(pad_cell "$col_w" "yes")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "Containers")" \
-    "$(pad_cell "$col_w" "no")" \
-    "$(pad_cell "$col_w" "yes")" \
-    "$(pad_cell "$col_w" "yes")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "Cloud / web")" \
-    "$(pad_cell "$col_w" "no")" \
-    "$(pad_cell "$col_w" "limited")" \
-    "$(pad_cell "$col_w" "yes")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "Risk")" \
-    "$(pad_cell "$col_w" "low")" \
-    "$(pad_cell "$col_w" "medium")" \
-    "$(pad_cell "$col_w" "high")"
-  printf "%s\n" "$sep"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "Tooling")" \
-    "$(pad_cell "$col_w" "git, node, npx")" \
-    "$(pad_cell "$col_w" "git, node, npx")" \
-    "$(pad_cell "$col_w" "git, node, npx")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "bw (if github)")" \
-    "$(pad_cell "$col_w" "bw (if github)")" \
-    "$(pad_cell "$col_w" "bw")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "docker cli")" \
-    "$(pad_cell "$col_w" "docker cli")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "uvx")"
-  printf "%s\n" "$sep"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "Key MCPs")" \
-    "$(pad_cell "$col_w" "github")" \
-    "$(pad_cell "$col_w" "github")" \
-    "$(pad_cell "$col_w" "github")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "azure-devops")" \
-    "$(pad_cell "$col_w" "azure-devops")" \
-    "$(pad_cell "$col_w" "azure-devops")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "context7")" \
-    "$(pad_cell "$col_w" "context7")" \
-    "$(pad_cell "$col_w" "context7")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "figma")" \
-    "$(pad_cell "$col_w" "figma")" \
-    "$(pad_cell "$col_w" "figma")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "filesystem")" \
-    "$(pad_cell "$col_w" "filesystem")" \
-    "$(pad_cell "$col_w" "filesystem")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "git")" \
-    "$(pad_cell "$col_w" "git")" \
-    "$(pad_cell "$col_w" "git")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "memory")" \
-    "$(pad_cell "$col_w" "memory")" \
-    "$(pad_cell "$col_w" "memory")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "atlassian")" \
-    "$(pad_cell "$col_w" "atlassian")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "shell")" \
-    "$(pad_cell "$col_w" "shell")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "docker")" \
-    "$(pad_cell "$col_w" "docker")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "kubernetes")" \
-    "$(pad_cell "$col_w" "kubernetes")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "http")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "aws")"
-  printf "| %s | %s | %s | %s |\n" \
-    "$(pad_cell "$label_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "")" \
-    "$(pad_cell "$col_w" "tailscale")"
-  printf "%s\n" "$sep"
-  printf "custom  Start from restricted, balanced, or open and choose curated MCPs and permission groups yourself.\n"
-}
-
-pick_with_gum() {
-  local prompt="$1"; shift
-  "$GUM_BIN" choose --header "$prompt" "$@"
-}
-
-pick_many_with_gum() {
-  local prompt="$1"; shift
-  "$GUM_BIN" choose --no-limit --header "$prompt" "$@"
-}
-
-effective_mcps() {
-  local profile="$1" base="$2"
-  local values=()
-  case "$profile" in
-    restricted) values=("${RESTRICTED_MCPS[@]}") ;;
-    balanced) values=("${RESTRICTED_MCPS[@]}" "${BALANCED_EXTRA_MCPS[@]}") ;;
-    open) values=("${RESTRICTED_MCPS[@]}" "${BALANCED_EXTRA_MCPS[@]}" "${OPEN_EXTRA_MCPS[@]}") ;;
-    custom)
-      case "$base" in
-        restricted) values=("${RESTRICTED_MCPS[@]}") ;;
-        balanced) values=("${RESTRICTED_MCPS[@]}" "${BALANCED_EXTRA_MCPS[@]}") ;;
-        open) values=("${RESTRICTED_MCPS[@]}" "${BALANCED_EXTRA_MCPS[@]}" "${OPEN_EXTRA_MCPS[@]}") ;;
-        *) values=("${RESTRICTED_MCPS[@]}" "${BALANCED_EXTRA_MCPS[@]}") ;;
-      esac
-      values+=("${CUSTOM_ENABLED_MCPS[@]}")
-      local item filtered=()
-      for item in "${values[@]}"; do
-        if ! contains_word "$item" "${CUSTOM_DISABLED_MCPS[@]}"; then
-          filtered+=("$item")
-        fi
-      done
-      values=("${filtered[@]}")
-      ;;
-  esac
-  printf "%s\n" "${values[@]}" | unique_words
-}
-
-effective_permission_groups() {
-  local profile="$1" base="$2"
-  local values=()
-  case "$profile" in
-    restricted) values=("${RESTRICTED_PERMISSION_GROUPS[@]}") ;;
-    balanced) values=("${RESTRICTED_PERMISSION_GROUPS[@]}" "${BALANCED_EXTRA_PERMISSION_GROUPS[@]}") ;;
-    open) values=("${RESTRICTED_PERMISSION_GROUPS[@]}" "${BALANCED_EXTRA_PERMISSION_GROUPS[@]}" "${OPEN_EXTRA_PERMISSION_GROUPS[@]}") ;;
-    custom)
-      case "$base" in
-        restricted) values=("${RESTRICTED_PERMISSION_GROUPS[@]}") ;;
-        balanced) values=("${RESTRICTED_PERMISSION_GROUPS[@]}" "${BALANCED_EXTRA_PERMISSION_GROUPS[@]}") ;;
-        open) values=("${RESTRICTED_PERMISSION_GROUPS[@]}" "${BALANCED_EXTRA_PERMISSION_GROUPS[@]}" "${OPEN_EXTRA_PERMISSION_GROUPS[@]}") ;;
-        *) values=("${RESTRICTED_PERMISSION_GROUPS[@]}" "${BALANCED_EXTRA_PERMISSION_GROUPS[@]}") ;;
-      esac
-      values+=("${CUSTOM_ENABLED_PERMISSION_GROUPS[@]}")
-      local item filtered=()
-      for item in "${values[@]}"; do
-        if ! contains_word "$item" "${CUSTOM_DISABLED_PERMISSION_GROUPS[@]}"; then
-          filtered+=("$item")
-        fi
-      done
-      values=("${filtered[@]}")
-      ;;
-  esac
-  printf "%s\n" "${values[@]}" | unique_words
-}
-
-default_memory_provider_for_profile() {
-  local profile="$1"
-  if [ "$profile" = "restricted" ]; then
-    printf "builtin"
-  else
-    printf "obsidian"
-  fi
 }
 
 install_gum_if_supported || true

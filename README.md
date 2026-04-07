@@ -272,7 +272,13 @@ packs/
     claude/
       agents/                         # Pack-owned Claude agents
       rules/                          # Pack-owned Claude rules
-    docs/                             # Pack quickstart and playbooks
+    docs/
+      quickstart.md                   # Pack quickstart and profile guidance
+      playbooks/
+        execute.md                    # Non-trivial delivery sequence
+        review.md                     # Code review checklist
+        orchestration.md              # Multi-agent routing and context discipline
+        health-check.md               # Installation verification
   content-creation/
     pack.yaml                         # Pack-owned schema for editorial and campaign work
     claude/
@@ -319,8 +325,11 @@ templates/
 docs/
   architecture/
     template-dependency-inventory.md  # Template and resolver dependency map
+  packs/
+    research-and-strategy.md          # Design-complete backlog candidate spec
   security/
     README.md                         # Review method and approval criteria
+    CONTRIBUTING.md                   # MCP and plugin evaluation process
     mcp-decisions/                    # Per-pack MCP decisions
     plugin-decisions/                 # Policy decisions such as MCP-only
 tests/

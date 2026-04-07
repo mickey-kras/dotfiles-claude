@@ -2,7 +2,7 @@
 # Registers and reconciles MCP servers in Claude Code CLI and Claude Desktop App.
 # Idempotent and authoritative: keeps the managed set, removes unmanaged extras.
 #
-# hash: 0deca84578b3f64609637c90a70f773e9ce2f0570dc3e6f53234292885b3a620
+# hash: 273fe0f15bfefaf1cee8c112b383f97ff6a50338d92b560657ab2a52ff4a8f45
 
 set -euo pipefail
 

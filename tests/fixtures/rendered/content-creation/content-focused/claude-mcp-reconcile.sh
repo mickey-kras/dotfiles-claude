@@ -7,33 +7,17 @@
 set -euo pipefail
 
 FAILED=0
-HOME_SLASHED="/Users/mikhailkrasilnikov"RUNTIME_PROFILE="open"
-PROFILE_BASE="open"
-AZURE_DEVOPS_ORG=""
+HOME_SLASHED="/Users/mikhailkrasilnikov"RUNTIME_PROFILE="focused"
+PROFILE_BASE="focused"
+AZURE_DEVOPS_ORG="<no value>"
 MEMORY_PROVIDER="builtin"
 OBSIDIAN_VAULT_PATH=""
 
 DESIRED_MCP_NAMES=(
-  "atlassian"
-  "aws"
-  "azure-devops"
   "context7"
-  "docker"
-  "exa"
-  "fal-ai"
-  "figma"
   "filesystem"
-  "firecrawl"
   "git"
-  "github"
-  "http"
-  "kubernetes"
   "memory"
-  "playwright"
-  "process"
-  "shell"
-  "tailscale"
-  "terraform"
   "thinking"
 )
 

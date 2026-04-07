@@ -179,19 +179,39 @@ runtime = json.load(open(sys.argv[1], encoding="utf-8"))
 pack = runtime["pack"]
 resolved = runtime["resolved"]
 matched = runtime["matched_profile"]
+state = runtime["state"]
 
-profile_line = matched if matched else f"custom from {runtime['state']['profile']['selected']}"
-print(f"Pack: {pack['label']} ({pack['id']})")
-print(f"Profile: {profile_line}")
-print(f"MCPs: {len(resolved['mcps']['enabled'])}")
-print(f"Skills: {len(resolved['skills']['enabled'])}")
-print(f"Agents: {len(resolved['agents']['enabled'])}")
-print(f"Rules: {len(resolved['rules']['enabled'])}")
-print(f"Permissions: {len(resolved['permissions']['enabled'])}")
+profile_line = matched if matched else f"custom (from {state['profile']['selected']})"
+mode_tag = "preset" if matched else "custom"
+
+print("--- Current Configuration ---")
+print(f"  Pack:        {pack['label']} ({pack['id']})")
+print(f"  Profile:     {profile_line} [{mode_tag}]")
+print(f"  MCPs:        {len(resolved['mcps']['enabled'])} enabled")
+print(f"  Skills:      {len(resolved['skills']['enabled'])} enabled")
+print(f"  Agents:      {len(resolved['agents']['enabled'])} enabled")
+print(f"  Rules:       {len(resolved['rules']['enabled'])} enabled")
+print(f"  Permissions: {len(resolved['permissions']['enabled'])} groups")
+
+settings_lines = []
 for key, value in resolved["settings"].items():
     if value == "":
         continue
-    print(f"{key}: {value}")
+    settings_lines.append(f"{key}: {value}")
+if settings_lines:
+    print(f"  Settings:    {', '.join(settings_lines)}")
+
+warnings = []
+for mcp_id in resolved["mcps"]["enabled"]:
+    catalog_entry = pack.get("catalogs", {}).get("mcps", {}).get(mcp_id, {})
+    if catalog_entry.get("needs_secrets"):
+        warnings.append(f"{mcp_id} (needs secrets)")
+    if catalog_entry.get("prompt_injection_risk") == "high":
+        warnings.append(f"{mcp_id} (high injection risk)")
+if warnings:
+    unique_warnings = list(dict.fromkeys(warnings))
+    print(f"  Warnings:    {', '.join(unique_warnings[:5])}")
+print("-----------------------------")
 PY
 }
 

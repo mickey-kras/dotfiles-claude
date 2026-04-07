@@ -16,7 +16,12 @@
     "firecrawl",
     "fal-ai"
   ],
-  "selection_enabled_skills": [],
+  "selection_enabled_skills": [
+    "context-budget",
+    "obsidian-memory",
+    "verification-before-completion",
+    "writing-plans"
+  ],
   "selection_enabled_agents": [
     "content-strategist",
     "research-synthesizer",

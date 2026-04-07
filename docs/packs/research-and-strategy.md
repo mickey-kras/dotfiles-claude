@@ -2,59 +2,128 @@
 
 Status: design-complete backlog candidate
 
-Primary job:
-- deep investigation
-- source comparison
-- synthesis
-- strategic recommendation
-- executive-style reporting
+## Primary job
 
-Candidate profiles:
-- `desk`: low-risk reading and synthesis
-- `analyst`: broader repo and standards research
-- `investigation`: wider crawling and search with stronger security constraints
+- deep investigation and evidence gathering
+- source comparison and synthesis
+- strategic recommendation with uncertainty reporting
+- executive-style reporting and decision support
 
-Candidate MCP shortlist:
-- filesystem
-- git
-- memory
-- thinking
-- playwright
-- context7
-- http fetch only with explicit profile gating
-- exa and firecrawl only if future security review justifies them
+## Why this pack is distinct
 
-Operating model:
-- start with source inventory and evidence grading
-- keep raw notes, claims, and conclusions separate
-- synthesize only after source quality and gaps are explicit
-- end with uncertainty reporting, not just recommendations
+- software-development centers on code delivery and operational execution
+- content-creation centers on editorial production and publishing
+- research-and-strategy centers on evidence quality, synthesis rigor, and recommendation clarity
 
-Candidate docs and playbooks:
-- research intake checklist
-- evidence matrix template
-- executive-summary playbook
-- source-quality rubric
+## Candidate profiles
 
-Candidate agents:
-- trend-researcher
-- competitive-analyst
-- evidence-reviewer
-- report-writer
-- executive-summary-writer
+### `desk`
 
-Candidate rules:
-- evidence-over-claims
-- uncertainty-reporting
-- citation-discipline
-- report-structure
+Low-risk reading and local synthesis.
 
-Reason to keep separate from the other packs:
-- software-development is execution-heavy
-- content-creation is publishing-heavy
-- research-and-strategy centers on evidence gathering and recommendation quality
+MCPs: filesystem, git, memory, thinking, context7
+Permissions: core_read_write, shell_readonly, git_safe
+Use when: structured reading, local note-taking, evidence grading from existing materials
 
-Current decision:
-- keep this pack as a design-complete candidate
-- do not implement it until the crawl and search stack is security-reviewed with
-  the same bar as the content-creation `campaign` profile
+### `analyst`
+
+Broader repo, standards, and documentation research.
+
+MCPs: filesystem, git, memory, thinking, context7, playwright, process
+Permissions: core_read_write, shell_readonly, git_safe, local_file_mutation
+Use when: cross-repo investigation, standards comparison, structured report generation
+
+### `investigation`
+
+Wider crawling and search with stronger security constraints.
+
+MCPs: filesystem, git, memory, thinking, context7, playwright, process, http, exa, firecrawl
+Permissions: core_read_write, shell_readonly, git_safe, local_file_mutation, web_access, secret_tools
+Use when: market research, competitive analysis, broad evidence gathering from remote sources
+Security: high injection risk from web content, requires trusted personal machines only
+
+## Candidate agents
+
+### trend-researcher
+- Scan sources for emerging patterns, market signals, and competitive moves.
+- Produce a structured trend brief with confidence levels and source quality notes.
+- Tools: Read, Glob, Grep, WebSearch, WebFetch
+
+### competitive-analyst
+- Compare products, services, or approaches across defined dimensions.
+- Produce comparison matrices with evidence links and gap analysis.
+- Tools: Read, Glob, Grep, WebSearch, WebFetch
+
+### evidence-reviewer
+- Grade source quality, flag contradictions, and identify evidence gaps.
+- Produce an evidence map separating strong claims from weak or unsupported ones.
+- Tools: Read, Glob, Grep
+
+### report-writer
+- Turn research briefs into structured reports with executive summary, findings, and recommendations.
+- Maintain citation discipline and uncertainty reporting throughout.
+- Tools: Read, Glob, Grep, Edit, Write
+
+### executive-summary-writer
+- Compress a full research output into a decision-ready summary.
+- Highlight key decisions, risks, and recommended actions.
+- Tools: Read, Glob, Grep, Write
+
+## Candidate rules
+
+### evidence-over-claims
+- Require evidence links for factual assertions.
+- Flag unsupported claims explicitly rather than silently including them.
+- Distinguish first-party data from third-party commentary.
+
+### uncertainty-reporting
+- Report confidence levels for key conclusions.
+- Separate verified facts from reasonable inference from speculation.
+- Call out what is unknown and what cannot be verified with available sources.
+
+### citation-discipline
+- Same as content-creation: prefer primary sources, flag stale or conflicting evidence.
+
+### report-structure
+- Executive summary first, then findings, then detailed analysis.
+- Recommendations section must reference specific findings.
+- Appendix for raw source lists and methodology notes.
+
+## Candidate skills
+
+- context-budget
+- obsidian-memory
+- writing-plans
+- verification-before-completion
+
+## Candidate docs and playbooks
+
+- Research intake checklist: define question, scope, source types, and output format
+- Evidence matrix template: structured grid for source quality grading
+- Executive summary playbook: compress findings into decision-ready format
+- Source quality rubric: criteria for rating primary, secondary, and tertiary sources
+
+## Settings schema
+
+- memory_provider: builtin or obsidian
+- obsidian_vault_path: conditional on obsidian selection
+- research_workspace: path for local research output
+
+## Guardrails
+
+Same shared hard bans as software-development.
+No profile-specific bans beyond the shared set.
+
+## MCP security notes
+
+- http, exa, firecrawl carry high prompt-injection risk from web content
+- these are gated to `investigation` profile only
+- same Bitwarden-backed credential handling as other packs
+- no new MCP candidates beyond the existing approved set
+
+## Implementation decision
+
+Keep this pack as a design-complete candidate. Implement when:
+1. the crawl and search stack passes a focused security review for research workflows
+2. there is concrete user demand beyond what content-creation `campaign` already provides
+3. the pack would not just duplicate content-creation with different labels
