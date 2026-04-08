@@ -147,23 +147,10 @@ public sealed class MainWindow : Window
 
     private static Dictionary<string, string> LoadChezmoiData()
     {
-        var data = new Dictionary<string, string>();
         var configPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             ".config", "chezmoi", "chezmoi.toml");
-        if (!File.Exists(configPath))
-            return data;
-
-        foreach (var line in File.ReadAllLines(configPath))
-        {
-            var trimmed = line.Trim();
-            var eqIndex = trimmed.IndexOf('=');
-            if (eqIndex <= 0) continue;
-            var key = trimmed[..eqIndex].Trim();
-            var value = trimmed[(eqIndex + 1)..].Trim().Trim('"');
-            data[key] = value;
-        }
-        return data;
+        return WizardHelpers.ParseChezmoiToml(configPath);
     }
 
     private WizardState InitState()
@@ -171,8 +158,11 @@ public sealed class MainWindow : Window
         if (File.Exists(_stateFile) && File.ReadAllText(_stateFile).Trim().Length > 0)
         {
             var state = PackStateHelper.ReadState(_stateFile);
-            PreFillSettingsFromChezmoi(state);
-            return state;
+            if (!string.IsNullOrEmpty(state.CapabilityPack))
+            {
+                PreFillSettingsFromChezmoi(state);
+                return state;
+            }
         }
 
         var defaultPack = _packs[0];
@@ -184,32 +174,8 @@ public sealed class MainWindow : Window
         return state2;
     }
 
-    private void PreFillSettingsFromChezmoi(WizardState state)
-    {
-        var profileFields = new[] { "user_name", "user_role_summary", "user_stack_summary" };
-        foreach (var key in profileFields)
-        {
-            if (!state.Settings.ContainsKey(key) || string.IsNullOrEmpty(state.Settings.GetValueOrDefault(key)))
-            {
-                if (_chezmoiData.TryGetValue(key, out var val) && !string.IsNullOrEmpty(val))
-                    state.Settings[key] = val;
-            }
-        }
-
-        var settingsKeys = new[]
-        {
-            "obsidian_vault_path", "azure_devops_org", "memory_provider",
-            "content_workspace", "research_workspace"
-        };
-        foreach (var key in settingsKeys)
-        {
-            if (!state.Settings.ContainsKey(key) || string.IsNullOrEmpty(state.Settings.GetValueOrDefault(key)))
-            {
-                if (_chezmoiData.TryGetValue(key, out var val) && !string.IsNullOrEmpty(val))
-                    state.Settings[key] = val;
-            }
-        }
-    }
+    private void PreFillSettingsFromChezmoi(WizardState state) =>
+        WizardHelpers.PreFillSettingsFromChezmoi(state, _chezmoiData);
 
     private void BuildUi()
     {
@@ -345,15 +311,8 @@ public sealed class MainWindow : Window
         }
     }
 
-    private string GetSummaryText()
-    {
-        var profileLine = _state.ProfileMode == "preset"
-            ? _state.ProfileSelected
-            : $"custom (from {_state.ProfileSelected})";
-        return $"Pack: {_pack.Label} | Profile: {profileLine} | " +
-               $"MCPs: {_state.EnabledMcps.Count} | Skills: {_state.EnabledSkills.Count} | " +
-               $"Agents: {_state.EnabledAgents.Count} | Rules: {_state.EnabledRules.Count}";
-    }
+    private string GetSummaryText() =>
+        WizardHelpers.GetSummaryText(_state, _pack.Label);
 
     private void UpdateSummary()
     {
@@ -364,10 +323,8 @@ public sealed class MainWindow : Window
     // Hoverable radio items (replaces RadioGroup for per-item hover)
     // -----------------------------------------------------------------------
 
-    private static string FormatRadioItem(string label, bool selected)
-    {
-        return selected ? $" (*) {label}" : $" ( ) {label}";
-    }
+    private static string FormatRadioItem(string label, bool selected) =>
+        WizardHelpers.FormatRadioItem(label, selected);
 
     private List<Label> BuildRadioItems(
         View container, string[] labels, int selectedIdx, Action<int> onSelect)
@@ -893,11 +850,8 @@ public sealed class MainWindow : Window
         _settingControls.Add((key, textField));
     }
 
-    private static bool IsMcpDependentSetting(string key) => key switch
-    {
-        "azure_devops_org" => true,
-        _ => false,
-    };
+    private static bool IsMcpDependentSetting(string key) =>
+        WizardHelpers.IsMcpDependentSetting(key);
 
     private void RebuildSettingsContent()
     {
@@ -946,18 +900,8 @@ public sealed class MainWindow : Window
         _state.ProfileMode = "custom";
     }
 
-    private bool SelectionMatches(PackProfile profile)
-    {
-        var sel = profile.Selection;
-        return SetEqual(sel.Mcps.Enabled, _state.EnabledMcps)
-            && SetEqual(sel.Skills.Enabled, _state.EnabledSkills)
-            && SetEqual(sel.Agents.Enabled, _state.EnabledAgents)
-            && SetEqual(sel.Rules.Enabled, _state.EnabledRules)
-            && SetEqual(sel.Permissions.Enabled, _state.EnabledPermissions);
-    }
-
-    private static bool SetEqual(List<string> a, List<string> b) =>
-        a.Count == b.Count && new HashSet<string>(a).SetEquals(b);
+    private bool SelectionMatches(PackProfile profile) =>
+        WizardHelpers.SelectionMatchesProfile(profile, _state);
 
     // -----------------------------------------------------------------------
     // Persistence

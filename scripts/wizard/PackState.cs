@@ -203,9 +203,9 @@ public static class PackStateHelper
 
         return new WizardState
         {
-            CapabilityPack = dict.GetValueOrDefault("capability_pack").GetString() ?? "",
-            ProfileSelected = dict.GetValueOrDefault("profile_selected").GetString() ?? "",
-            ProfileMode = dict.GetValueOrDefault("profile_mode").GetString() ?? "preset",
+            CapabilityPack = GetStringValue(dict, "capability_pack", ""),
+            ProfileSelected = GetStringValue(dict, "profile_selected", ""),
+            ProfileMode = GetStringValue(dict, "profile_mode", "preset"),
             EnabledMcps = GetStringList(dict, "selection_enabled_mcps"),
             EnabledSkills = GetStringList(dict, "selection_enabled_skills"),
             EnabledAgents = GetStringList(dict, "selection_enabled_agents"),
@@ -213,6 +213,13 @@ public static class PackStateHelper
             EnabledPermissions = GetStringList(dict, "selection_enabled_permissions"),
             Settings = GetSettings(dict),
         };
+    }
+
+    private static string GetStringValue(Dictionary<string, JsonElement> dict, string key, string fallback)
+    {
+        if (!dict.TryGetValue(key, out var el) || el.ValueKind != JsonValueKind.String)
+            return fallback;
+        return el.GetString() ?? fallback;
     }
 
     private static List<string> GetStringList(Dictionary<string, JsonElement> dict, string key)
