@@ -2,6 +2,7 @@ using Terminal.Gui;
 using Terminal.Gui.App;
 using Terminal.Gui.Configuration;
 using Terminal.Gui.Drawing;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Attribute = Terminal.Gui.Drawing.Attribute;
@@ -22,9 +23,11 @@ public sealed class MainWindow : Window
     private Button _applyButton = null!;
     private Button _exitButton = null!;
 
-    // Pack/Profile tab controls
-    private RadioGroup _packRadio = null!;
-    private RadioGroup _profileRadio = null!;
+    // Pack/Profile tab - custom hoverable radio items
+    private List<Label> _packItems = [];
+    private List<Label> _profileItems = [];
+    private int _packSelectedIdx;
+    private int _profileSelectedIdx;
 
     // Catalog tab scroll views with checkboxes
     private readonly Dictionary<string, List<CheckBox>> _catalogChecks = [];
@@ -137,6 +140,7 @@ public sealed class MainWindow : Window
 
     private static void AttachHover(View view)
     {
+        view.SchemeName = "Dotfiles";
         view.MouseEnter += (_, _) => { view.SchemeName = "DotfilesHover"; };
         view.MouseLeave += (_, _) => { view.SchemeName = "Dotfiles"; };
     }
@@ -182,7 +186,6 @@ public sealed class MainWindow : Window
 
     private void PreFillSettingsFromChezmoi(WizardState state)
     {
-        // Pre-fill user profile fields from chezmoi data
         var profileFields = new[] { "user_name", "user_role_summary", "user_stack_summary" };
         foreach (var key in profileFields)
         {
@@ -193,7 +196,6 @@ public sealed class MainWindow : Window
             }
         }
 
-        // Pre-fill pack settings from chezmoi data
         var settingsKeys = new[]
         {
             "obsidian_vault_path", "azure_devops_org", "memory_provider",
@@ -211,7 +213,6 @@ public sealed class MainWindow : Window
 
     private void BuildUi()
     {
-        // ASCII logo banner
         var logo = new Label
         {
             X = 1, Y = 0,
@@ -227,7 +228,6 @@ public sealed class MainWindow : Window
         };
         Add(logo);
 
-        // Tool detection line
         var tools = DetectTools();
         var toolLabel = new Label
         {
@@ -273,7 +273,7 @@ public sealed class MainWindow : Window
             Text = "Apply",
             X = Pos.Center() - 10,
             Y = Pos.Bottom(_tabView),
-            IsDefault = true,
+            IsDefault = false,
         };
         _applyButton.Accepting += (_, e) =>
         {
@@ -361,6 +361,53 @@ public sealed class MainWindow : Window
     }
 
     // -----------------------------------------------------------------------
+    // Hoverable radio items (replaces RadioGroup for per-item hover)
+    // -----------------------------------------------------------------------
+
+    private static string FormatRadioItem(string label, bool selected)
+    {
+        return selected ? $" (*) {label}" : $" ( ) {label}";
+    }
+
+    private List<Label> BuildRadioItems(
+        View container, string[] labels, int selectedIdx, Action<int> onSelect)
+    {
+        var items = new List<Label>();
+        for (var i = 0; i < labels.Length; i++)
+        {
+            var idx = i;
+            var lbl = new Label
+            {
+                X = 0, Y = i,
+                Width = Dim.Fill(),
+                Height = 1,
+                Text = FormatRadioItem(labels[i], i == selectedIdx),
+                CanFocus = true,
+            };
+            AttachHover(lbl);
+            lbl.MouseClick += (_, args) =>
+            {
+                if (args.Flags.HasFlag(MouseFlags.Button1Clicked))
+                {
+                    for (var j = 0; j < items.Count; j++)
+                        items[j].Text = FormatRadioItem(labels[j], j == idx);
+                    onSelect(idx);
+                    args.Handled = true;
+                }
+            };
+            items.Add(lbl);
+            container.Add(lbl);
+        }
+        return items;
+    }
+
+    private void UpdateRadioLabels(List<Label> items, string[] labels, int selectedIdx)
+    {
+        for (var i = 0; i < items.Count; i++)
+            items[i].Text = FormatRadioItem(labels[i], i == selectedIdx);
+    }
+
+    // -----------------------------------------------------------------------
     // Pack / Profile tab
     // -----------------------------------------------------------------------
 
@@ -369,7 +416,6 @@ public sealed class MainWindow : Window
         var tab = new Tab { DisplayText = " Pack/Profile " };
         var view = new View { Width = Dim.Fill(), Height = Dim.Fill(), CanFocus = true };
 
-        // Pack selection
         var packFrame = new FrameView
         {
             Title = "Capability Pack",
@@ -380,27 +426,17 @@ public sealed class MainWindow : Window
         };
 
         var packLabels = _packs.Select(p => $"{p.Label} - {p.Description}").ToArray();
-        var currentPackIdx = _packs.FindIndex(p => p.Id == _state.CapabilityPack);
+        _packSelectedIdx = Math.Max(0, _packs.FindIndex(p => p.Id == _state.CapabilityPack));
 
-        _packRadio = new RadioGroup
+        _packItems = BuildRadioItems(packFrame, packLabels, _packSelectedIdx, idx =>
         {
-            X = 1, Y = 0,
-            Width = Dim.Fill(1),
-            RadioLabels = packLabels,
-            SelectedItem = Math.Max(0, currentPackIdx),
-            CanFocus = true,
-        };
-        _packRadio.SelectedItemChanged += (_, args) =>
-        {
-            var packInfo = _packs[args.SelectedItem ?? 0];
-            if (packInfo.Id == _state.CapabilityPack)
-                return;
-            SwitchPack(packInfo.Id);
-        };
-        packFrame.Add(_packRadio);
+            _packSelectedIdx = idx;
+            var packInfo = _packs[idx];
+            if (packInfo.Id != _state.CapabilityPack)
+                SwitchPack(packInfo.Id);
+        });
         view.Add(packFrame);
 
-        // Profile selection
         var profileFrame = new FrameView
         {
             Title = "Profile",
@@ -411,38 +447,28 @@ public sealed class MainWindow : Window
             CanFocus = true,
         };
 
-        _profileRadio = BuildProfileRadio();
-        profileFrame.Add(_profileRadio);
+        BuildProfileItems(profileFrame);
         view.Add(profileFrame);
 
         tab.View = view;
         return tab;
     }
 
-    private RadioGroup BuildProfileRadio()
+    private void BuildProfileItems(View container)
     {
         var profileIds = _pack.Profiles.Keys.ToList();
         var profileLabels = _pack.Profiles.Values
             .Select(p => $"{p.Label} - {p.Description}")
             .ToArray();
-        var currentIdx = profileIds.IndexOf(_state.ProfileSelected);
+        _profileSelectedIdx = Math.Max(0, profileIds.IndexOf(_state.ProfileSelected));
 
-        var radio = new RadioGroup
+        _profileItems = BuildRadioItems(container, profileLabels, _profileSelectedIdx, idx =>
         {
-            X = 1, Y = 0,
-            Width = Dim.Fill(1),
-            RadioLabels = profileLabels,
-            SelectedItem = Math.Max(0, currentIdx),
-            CanFocus = true,
-        };
-        radio.SelectedItemChanged += (_, args) =>
-        {
-            var profileId = profileIds[args.SelectedItem ?? 0];
-            if (profileId == _state.ProfileSelected)
-                return;
-            SwitchProfile(profileId);
-        };
-        return radio;
+            _profileSelectedIdx = idx;
+            var profileId = profileIds[idx];
+            if (profileId != _state.ProfileSelected)
+                SwitchProfile(profileId);
+        });
     }
 
     private void SwitchPack(string packId)
@@ -466,7 +492,6 @@ public sealed class MainWindow : Window
 
     private void RebuildUi()
     {
-        // Remove all subviews and rebuild
         RemoveAll();
         _catalogChecks.Clear();
         _settingControls.Clear();
@@ -476,7 +501,7 @@ public sealed class MainWindow : Window
     }
 
     // -----------------------------------------------------------------------
-    // MCP tab (catalog + MCP-dependent settings below)
+    // MCP tab (catalog in FrameView + MCP-dependent settings in FrameView)
     // -----------------------------------------------------------------------
 
     private Tab BuildMcpTab()
@@ -491,6 +516,15 @@ public sealed class MainWindow : Window
             return tab;
         }
 
+        var mcpFrame = new FrameView
+        {
+            Title = "MCPs",
+            X = 1, Y = 0,
+            Width = Dim.Fill(1),
+            Height = catalog.Count + 2,
+            CanFocus = true,
+        };
+
         var enabled = new HashSet<string>(_state.EnabledMcps);
         var checks = new List<CheckBox>();
         var y = 0;
@@ -503,7 +537,7 @@ public sealed class MainWindow : Window
 
             var cb = new CheckBox
             {
-                X = 2,
+                X = 1,
                 Y = y,
                 Width = Dim.Fill(1),
                 Text = $" {itemId} - {desc}",
@@ -528,18 +562,20 @@ public sealed class MainWindow : Window
             };
             AttachHover(cb);
             checks.Add(cb);
-            view.Add(cb);
+            mcpFrame.Add(cb);
             y++;
         }
 
         _catalogChecks["mcps"] = checks;
+        view.Add(mcpFrame);
 
-        // MCP Settings section
-        _mcpSettingsContainer = new View
+        // MCP Settings FrameView
+        _mcpSettingsContainer = new FrameView
         {
-            X = 0,
-            Y = y + 1,
-            Width = Dim.Fill(),
+            Title = "MCP Settings",
+            X = 1,
+            Y = Pos.Bottom(mcpFrame) + 1,
+            Width = Dim.Fill(1),
             Height = Dim.Fill(),
             CanFocus = true,
         };
@@ -555,18 +591,12 @@ public sealed class MainWindow : Window
         _mcpSettingControls.Clear();
         var mcpSettingKeys = GetMcpDependentSettings();
         if (mcpSettingKeys.Count == 0)
-            return;
-
-        var separator = new Label
         {
-            X = 1, Y = 0,
-            Width = Dim.Fill(1),
-            Height = 1,
-            Text = "--- MCP Settings ---",
-        };
-        container.Add(separator);
+            container.Add(new Label { X = 1, Y = 0, Text = "No MCP-specific settings." });
+            return;
+        }
 
-        var y = 1;
+        var y = 0;
         foreach (var key in mcpSettingKeys)
         {
             if (!_pack.SettingsSchema.TryGetValue(key, out var schema))
@@ -576,7 +606,7 @@ public sealed class MainWindow : Window
 
             var label = new Label
             {
-                X = 2, Y = y,
+                X = 1, Y = y,
                 Width = 25,
                 Text = schema.Label + ":",
             };
@@ -584,7 +614,7 @@ public sealed class MainWindow : Window
 
             var textField = new TextField
             {
-                X = 28, Y = y,
+                X = 27, Y = y,
                 Width = Dim.Fill(2),
                 Text = currentValue,
                 CanFocus = true,
@@ -605,7 +635,6 @@ public sealed class MainWindow : Window
     {
         var result = new List<string>();
 
-        // Azure DevOps org is only relevant when azure-devops MCP is enabled
         if (_state.EnabledMcps.Contains("azure-devops") &&
             _pack.SettingsSchema.ContainsKey("azure_devops_org"))
             result.Add("azure_devops_org");
@@ -721,39 +750,50 @@ public sealed class MainWindow : Window
     {
         var y = 0;
 
-        // User profile section
-        var profileHeader = new Label
+        var profileFrame = new FrameView
         {
+            Title = "User Profile",
             X = 1, Y = y,
             Width = Dim.Fill(1),
-            Height = 1,
-            Text = "--- User Profile ---",
+            Height = 5,
+            CanFocus = true,
         };
-        container.Add(profileHeader);
-        y++;
+        AddUserProfileField(profileFrame, "user_name", "Display Name", 0);
+        AddUserProfileField(profileFrame, "user_role_summary", "Role Summary", 1);
+        AddUserProfileField(profileFrame, "user_stack_summary", "Stack Summary", 2);
+        container.Add(profileFrame);
+        y += 6;
 
-        AddUserProfileField(container, "user_name", "Display Name", ref y);
-        AddUserProfileField(container, "user_role_summary", "Role Summary", ref y);
-        AddUserProfileField(container, "user_stack_summary", "Stack Summary", ref y);
-        y++;
-
-        // Pack settings section
         var filteredSettings = _pack.SettingsSchema
             .Where(kv => !IsMcpDependentSetting(kv.Key))
             .ToList();
 
         if (filteredSettings.Count > 0)
         {
-            var settingsHeader = new Label
+            var visibleCount = 0;
+            foreach (var (key, schema) in filteredSettings)
             {
+                if (schema.VisibleIf != null)
+                {
+                    var visible = schema.VisibleIf.All(kv =>
+                        _state.Settings.TryGetValue(kv.Key, out var val) && val == kv.Value);
+                    if (!visible)
+                        continue;
+                }
+                visibleCount += schema.Type == "enum" ? schema.Options.Count : 1;
+                visibleCount++;
+            }
+
+            var settingsFrame = new FrameView
+            {
+                Title = "Pack Settings",
                 X = 1, Y = y,
                 Width = Dim.Fill(1),
-                Height = 1,
-                Text = "--- Pack Settings ---",
+                Height = Dim.Fill(),
+                CanFocus = true,
             };
-            container.Add(settingsHeader);
-            y++;
 
+            var sy = 0;
             foreach (var (key, schema) in filteredSettings)
             {
                 if (schema.VisibleIf != null)
@@ -768,11 +808,11 @@ public sealed class MainWindow : Window
 
                 var label = new Label
                 {
-                    X = 2, Y = y,
+                    X = 1, Y = sy,
                     Width = 25,
                     Text = schema.Label + ":",
                 };
-                container.Add(label);
+                settingsFrame.Add(label);
 
                 if (schema.Type == "enum" && schema.Options.Count > 0)
                 {
@@ -781,10 +821,11 @@ public sealed class MainWindow : Window
 
                     var radio = new RadioGroup
                     {
-                        X = 28, Y = y,
+                        X = 27, Y = sy,
                         Width = Dim.Fill(1),
                         RadioLabels = optionLabels,
                         SelectedItem = Math.Max(0, currentIdx),
+                        DoubleClickAccepts = false,
                         CanFocus = true,
                     };
                     var capturedKey = key;
@@ -795,15 +836,15 @@ public sealed class MainWindow : Window
                         SnapProfileIfNeeded();
                         RebuildSettingsContent();
                     };
-                    container.Add(radio);
+                    settingsFrame.Add(radio);
                     _settingControls.Add((key, radio));
-                    y += schema.Options.Count;
+                    sy += schema.Options.Count;
                 }
                 else
                 {
                     var textField = new TextField
                     {
-                        X = 28, Y = y,
+                        X = 27, Y = sy,
                         Width = Dim.Fill(2),
                         Text = currentValue,
                         CanFocus = true,
@@ -814,22 +855,23 @@ public sealed class MainWindow : Window
                         _state.Settings[capturedKey] = textField.Text;
                         SnapProfileIfNeeded();
                     };
-                    container.Add(textField);
+                    settingsFrame.Add(textField);
                     _settingControls.Add((key, textField));
-                    y++;
+                    sy++;
                 }
-                y++;
+                sy++;
             }
+            container.Add(settingsFrame);
         }
     }
 
-    private void AddUserProfileField(View container, string key, string label, ref int y)
+    private void AddUserProfileField(View container, string key, string label, int y)
     {
         var currentValue = _state.Settings.GetValueOrDefault(key, "");
 
         var lbl = new Label
         {
-            X = 2, Y = y,
+            X = 1, Y = y,
             Width = 25,
             Text = label + ":",
         };
@@ -837,7 +879,7 @@ public sealed class MainWindow : Window
 
         var textField = new TextField
         {
-            X = 28, Y = y,
+            X = 27, Y = y,
             Width = Dim.Fill(2),
             Text = currentValue,
             CanFocus = true,
@@ -849,7 +891,6 @@ public sealed class MainWindow : Window
         };
         container.Add(textField);
         _settingControls.Add((key, textField));
-        y++;
     }
 
     private static bool IsMcpDependentSetting(string key) => key switch
@@ -889,11 +930,16 @@ public sealed class MainWindow : Window
             {
                 _state.ProfileSelected = profileId;
                 _state.ProfileMode = "preset";
-                // Update profile radio if it exists
                 var profileIds = _pack.Profiles.Keys.ToList();
                 var idx = profileIds.IndexOf(profileId);
-                if (idx >= 0 && _profileRadio.SelectedItem != idx)
-                    _profileRadio.SelectedItem = idx;
+                if (idx >= 0 && _profileSelectedIdx != idx)
+                {
+                    _profileSelectedIdx = idx;
+                    var profileLabels = _pack.Profiles.Values
+                        .Select(p => $"{p.Label} - {p.Description}")
+                        .ToArray();
+                    UpdateRadioLabels(_profileItems, profileLabels, idx);
+                }
                 return;
             }
         }

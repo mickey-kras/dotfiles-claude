@@ -1,5 +1,7 @@
+using System.Text;
 using DotfilesWizard;
 using Terminal.Gui.App;
+using Terminal.Gui.Drawing;
 
 if (args.Length < 4 || args[0] != "--source" || args[2] != "--state")
 {
@@ -19,6 +21,10 @@ if (!Directory.Exists(sourceDir))
 Application.Init();
 try
 {
+    // Use consistent-width ASCII glyphs for checkbox alignment
+    Glyphs.CheckStateChecked = new Rune('x');
+    Glyphs.CheckStateUnChecked = new Rune(' ');
+
     var window = new MainWindow(sourceDir, stateFile);
     Application.Run(window);
     window.Dispose();
