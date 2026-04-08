@@ -1,5 +1,21 @@
 namespace DotfilesWizard;
 
+/// <summary>RGB color value for scheme consistency checks.</summary>
+public readonly record struct Rgb(int R, int G, int B);
+
+/// <summary>Color constants shared between schemes. Hover must match Active.</summary>
+public static class ThemeColors
+{
+    public static readonly Rgb Background = new(58, 58, 58);
+    public static readonly Rgb Foreground = new(255, 255, 255);
+    public static readonly Rgb Accent = new(0, 255, 255);
+    public static readonly Rgb ActiveBackground = new(0, 0, 215);
+
+    // Hover highlight uses the same colors as Active
+    public static readonly Rgb HoverForeground = Accent;
+    public static readonly Rgb HoverBackground = ActiveBackground;
+}
+
 public static class WizardHelpers
 {
     public static string FormatRadioItem(string label, bool selected)

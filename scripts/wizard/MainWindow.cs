@@ -108,9 +108,10 @@ public sealed class MainWindow : Window
     private static Scheme CreateColorScheme()
     {
         var baseScheme = SchemeManager.GetScheme("Base");
-        var bg = new Color(58, 58, 58);
-        var fg = new Color(255, 255, 255);
-        var accent = new Color(0, 255, 255);
+        var bg = ToColor(ThemeColors.Background);
+        var fg = ToColor(ThemeColors.Foreground);
+        var accent = ToColor(ThemeColors.Accent);
+        var activeBg = ToColor(ThemeColors.ActiveBackground);
         return baseScheme with
         {
             Normal = new Attribute(fg, bg),
@@ -118,7 +119,7 @@ public sealed class MainWindow : Window
             HotNormal = new Attribute(fg, bg),
             HotFocus = new Attribute(fg, bg),
             Disabled = new Attribute(new Color(128, 128, 128), bg),
-            Active = new Attribute(accent, new Color(0, 0, 215)),
+            Active = new Attribute(accent, activeBg),
             Highlight = new Attribute(fg, bg),
             Editable = new Attribute(fg, new Color(88, 88, 88)),
             ReadOnly = new Attribute(accent, new Color(18, 18, 18)),
@@ -127,16 +128,18 @@ public sealed class MainWindow : Window
 
     private static Scheme CreateHoverScheme()
     {
-        var hoverBg = new Color(0, 100, 100);
-        var fg = new Color(255, 255, 255);
+        var hoverFg = ToColor(ThemeColors.HoverForeground);
+        var hoverBg = ToColor(ThemeColors.HoverBackground);
         return SchemeManager.GetScheme("Dotfiles") with
         {
-            Normal = new Attribute(fg, hoverBg),
-            Focus = new Attribute(fg, hoverBg),
-            HotNormal = new Attribute(fg, hoverBg),
-            HotFocus = new Attribute(fg, hoverBg),
+            Normal = new Attribute(hoverFg, hoverBg),
+            Focus = new Attribute(hoverFg, hoverBg),
+            HotNormal = new Attribute(hoverFg, hoverBg),
+            HotFocus = new Attribute(hoverFg, hoverBg),
         };
     }
+
+    private static Color ToColor(Rgb rgb) => new(rgb.R, rgb.G, rgb.B);
 
     private static void AttachHover(View view)
     {
