@@ -50,9 +50,6 @@ B='\033[1;37m'  # bold white
 RED='\033[1;31m' # red
 R='\033[0m'     # reset
 
-# --- Pre-flight header ---
-printf "${B}.dotfiles bootstrap${R}\n\n"
-
 # --- Install chezmoi if missing ---
 if ! command -v chezmoi >/dev/null 2>&1; then
   printf "${Y}>${R} Installing chezmoi...\n"
@@ -73,8 +70,6 @@ if ! command -v chezmoi >/dev/null 2>&1; then
     export PATH="$HOME/bin:$PATH"
   fi
   printf "  ${G}+${R} chezmoi installed\n"
-else
-  printf "  ${G}+${R} chezmoi $(chezmoi --version 2>/dev/null | head -c 30)\n"
 fi
 
 # --- Install .NET SDK if missing (required for the setup wizard TUI) ---
@@ -97,17 +92,10 @@ if ! command -v dotnet >/dev/null 2>&1 || ! dotnet --list-sdks 2>/dev/null | gre
     curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0 --install-dir "$HOME/.dotnet" || true
     export PATH="$HOME/.dotnet:$PATH"
   fi
-  if command -v dotnet >/dev/null 2>&1; then
-    printf "  ${G}+${R} dotnet $(dotnet --version 2>/dev/null)\n"
-  else
+  if ! command -v dotnet >/dev/null 2>&1; then
     printf "  ${Y}>${R} .NET SDK not available - wizard will fall back to plain prompts\n"
   fi
-else
-  printf "  ${G}+${R} dotnet $(dotnet --version 2>/dev/null)\n"
 fi
-
-# AI tool detection moved into the TUI wizard
-printf "\n"
 
 RUNTIME_PROFILE="balanced"
 CAPABILITY_PACK="software-development"
@@ -326,30 +314,10 @@ while IFS= read -r line; do
   [ -n "$line" ] && EFFECTIVE_PERMISSION_GROUPS+=("$line")
 done < <(json_array_lines "$CONFIG_STATE_JSON" selection_enabled_permissions)
 
-detect_existing_name() {
-  local file
-  for file in "$HOME/.claude/CLAUDE.md" "$HOME/.codex/AGENTS.md"; do
-    if [ -f "$file" ]; then
-      sed -n 's/^- Name: \([^.]*\)\..*/\1/p' "$file" | head -n1
-      return 0
-    fi
-  done
-  return 1
-}
-
-EXISTING_NAME="$(detect_existing_name || true)"
-if [ -n "$EXISTING_NAME" ]; then
-  printf "${B}Reuse existing display name '${EXISTING_NAME}'? [Y/n]: ${R}"
-  read -r REUSE_NAME
-  if [ -z "$REUSE_NAME" ] || [ "$REUSE_NAME" = "y" ] || [ "$REUSE_NAME" = "Y" ]; then
-    USER_NAME="$EXISTING_NAME"
-  fi
-fi
-
-if [ -z "$USER_NAME" ]; then
-  printf "${B}Display name for generated instructions: ${R}"
-  read -r USER_NAME
-fi
+# User profile fields now come from the wizard Settings tab
+USER_NAME="$(json_value "$CONFIG_STATE_JSON" user_name 2>/dev/null || true)"
+USER_ROLE_SUMMARY="$(json_value "$CONFIG_STATE_JSON" user_role_summary 2>/dev/null || true)"
+USER_STACK_SUMMARY="$(json_value "$CONFIG_STATE_JSON" user_stack_summary 2>/dev/null || true)"
 
 if [ -z "$USER_NAME" ]; then
   USER_NAME="$(whoami)"
@@ -358,46 +326,6 @@ fi
 if [ "$MEMORY_PROVIDER" = "obsidian" ] && [ -z "$OBSIDIAN_VAULT_PATH" ]; then
   printf "  ${Y}>${R} Obsidian selected without a vault path - falling back to builtin memory\n"
   MEMORY_PROVIDER="builtin"
-fi
-
-EXISTING_ROLE="$(detect_existing_value user_role_summary)"
-if [ -n "$EXISTING_ROLE" ]; then
-  USER_ROLE_SUMMARY="$EXISTING_ROLE"
-else
-  USER_ROLE_SUMMARY="Full-stack software engineer focused on distributed systems, product delivery, and practical AI-assisted development."
-fi
-printf "${B}Role summary [%s]: ${R}" "$USER_ROLE_SUMMARY"
-read -r ROLE_INPUT
-[ -n "$ROLE_INPUT" ] && USER_ROLE_SUMMARY="$ROLE_INPUT"
-
-EXISTING_STACK="$(detect_existing_value user_stack_summary)"
-if [ -n "$EXISTING_STACK" ]; then
-  USER_STACK_SUMMARY="$EXISTING_STACK"
-else
-  USER_STACK_SUMMARY="C#/.NET, Python, Go, TypeScript, React, Angular; cloud and platform work across Azure, AWS, GCP, Cloudflare, and DigitalOcean."
-fi
-printf "${B}Stack summary [%s]: ${R}" "$USER_STACK_SUMMARY"
-read -r STACK_INPUT
-[ -n "$STACK_INPUT" ] && USER_STACK_SUMMARY="$STACK_INPUT"
-
-if contains_word azure-devops "${EFFECTIVE_MCPS[@]}"; then
-  EXISTING_AZDO="$(detect_existing_azdo_org)"
-  if [ -n "$EXISTING_AZDO" ]; then
-    AZURE_DEVOPS_ORG="$EXISTING_AZDO"
-  fi
-  printf "${B}Azure DevOps org name [%s]: ${R}" "$AZURE_DEVOPS_ORG"
-  read -r AZDO_INPUT
-  [ -n "$AZDO_INPUT" ] && AZURE_DEVOPS_ORG="$AZDO_INPUT"
-  python3 - "$CONFIG_STATE_JSON" "$AZURE_DEVOPS_ORG" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-path = Path(sys.argv[1])
-data = json.loads(path.read_text(encoding="utf-8"))
-data["azure_devops_org"] = sys.argv[2]
-path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-PY
 fi
 
 printf "\n${B}Planned configuration${R}\n"

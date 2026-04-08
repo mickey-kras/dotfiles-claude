@@ -129,6 +129,9 @@ def legacy_config(source_dir, state):
         "azure_devops_org": resolved["settings"].get("azure_devops_org", ""),
         "content_workspace": resolved["settings"].get("content_workspace", ""),
         "research_workspace": resolved["settings"].get("research_workspace", ""),
+        "user_name": state.get("user_name", ""),
+        "user_role_summary": state.get("user_role_summary", ""),
+        "user_stack_summary": state.get("user_stack_summary", ""),
         "matched_profile": matched_profile,
     }
 

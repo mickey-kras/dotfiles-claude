@@ -24,13 +24,13 @@ chezmoi init --apply https://github.com/mickey-kras/dotfiles.git
 chezmoi init --apply --source ~/dotfiles
 ```
 
-The installer now asks for:
-1. **Capability pack** - `software-development`, `content-creation`, or `research-and-strategy`
-2. **Pack-local profile** - preset or custom, depending on your pack choices
-3. **Pack settings** - for example memory provider, vault path, workspace path, or Azure DevOps org
-4. **Display name, role summary, stack summary**
+The installer launches a Terminal.Gui TUI wizard (.NET 10) with tabs for:
+1. **Pack/Profile** - pick a capability pack and a preset profile
+2. **MCPs** - toggle individual MCPs; MCP-dependent settings (Azure DevOps org) appear below
+3. **Skills / Agents / Rules / Permissions** - fine-tune what gets installed
+4. **Settings** - user profile (name, role, stack), memory provider, workspace paths
 
-If `gum` is installed, setup uses a richer TUI. Otherwise it falls back to plain Bash prompts.
+All fields pre-fill from existing chezmoi data when available. If .NET is unavailable, setup falls back to plain Bash prompts.
 
 ## What gets installed
 
@@ -115,6 +115,7 @@ All versions are pinned for supply-chain safety. OAuth MCPs authenticate in the 
 | Exa 3.1.9 | open | stdio (npx) | API key | high | AI-powered web search |
 | Firecrawl 3.11.0 | open | stdio (npx) | API key | high | Web scraping and crawling |
 | fal-ai 2.1.4 | open | stdio (npx) | API key | medium | AI image generation |
+| Telegram | campaign, investigation | stdio (npx) | Bitwarden item `mcp-telegram` | high | Telegram bot for content distribution and stakeholder updates |
 
 **Bitwarden-backed MCPs** require [Bitwarden CLI](https://bitwarden.com/help/cli/) plus a valid `~/.bw_session` file. Run `bw-login` after installing dotfiles to refresh the shared session cache used by Claude, Codex, and Cursor.
 
@@ -125,6 +126,7 @@ Required Bitwarden items and structure:
 - `exa-api-key`: login password = Exa API key
 - `firecrawl-api-key`: login password = Firecrawl API key
 - `fal-api-key`: login password = fal.ai API key
+- `mcp-telegram`: login password = Telegram bot token from BotFather
 
 Keep these item names unique. If Bitwarden contains multiple items with the
 same name, the wrapper cannot safely choose one without an explicit item id.
@@ -179,6 +181,7 @@ Managed first-party skills are installed pack-by-pack into:
 - `writing-plans`
 
 `content-creation` managed skills:
+- `ai-discoverability`
 - `context-budget`
 - `obsidian-memory`
 - `verification-before-completion`
@@ -187,6 +190,7 @@ Managed first-party skills are installed pack-by-pack into:
 `research-and-strategy` managed skills:
 - `context-budget`
 - `obsidian-memory`
+- `source-freshness-checker`
 - `verification-before-completion`
 - `writing-plans`
 
@@ -333,8 +337,13 @@ dot_local/
     executable_dotfiles-update.cmd    # -> ~/.local/bin/dotfiles-update.cmd
 scripts/
   bootstrap.sh                        # Main setup path for macOS/Linux/WSL/Git Bash
-  bootstrap-wizard.sh                 # Grouped installer UI
+  bootstrap-wizard.sh                 # Wizard launcher (TUI first, plain-text fallback)
   pack_state.py                       # Pack metadata and resolved-state helper
+  wizard/
+    MainWindow.cs                     # Terminal.Gui TUI wizard
+    PackState.cs                      # Pack data models and state helpers
+    Program.cs                        # Wizard entry point
+    DotfilesWizard.csproj             # .NET 10 project file
   chezmoi/
     run_onchange_after_configure-global-git-hooks.sh.tmpl   # Unix global Git hook setup
     run_onchange_after_install-claude-mcps.sh.tmpl          # Authoritative Claude MCP reconciliation
@@ -374,10 +383,10 @@ tests/
 
 **Required:** git, chezmoi (auto-installed by bootstrap), bash (Git Bash on Windows)
 
+**For TUI wizard:** .NET 10 SDK (auto-installed by bootstrap)
+
 **For MCPs:** node, npx
 
 **For open-profile MCPs only:** `uv` and `uvx`
-
-**For richer setup UI:** `gum`
 
 **For Bitwarden-backed MCPs:** Bitwarden CLI (`bw`)
