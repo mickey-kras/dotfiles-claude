@@ -61,6 +61,7 @@ public sealed class MainWindow : Window
 
         BuildUi();
         CheckTerminalSize();
+        Application.SizeChanged += (_, _) => CheckTerminalSize();
     }
 
     private Label? _sizeWarning;
@@ -104,6 +105,8 @@ public sealed class MainWindow : Window
             Disabled = new Attribute(new Color(128, 128, 128), new Color(18, 18, 18)),
             Active = new Attribute(new Color(0, 255, 255), new Color(0, 0, 215)),
             Highlight = new Attribute(new Color(255, 255, 255), new Color(0, 100, 100)),
+            Editable = new Attribute(new Color(255, 255, 255), new Color(88, 88, 88)),
+            ReadOnly = new Attribute(new Color(0, 175, 175), new Color(18, 18, 18)),
         };
     }
 
@@ -580,6 +583,7 @@ public sealed class MainWindow : Window
             _settingsContainer.RemoveAll();
             RebuildSettingsInto(_settingsContainer);
             _settingsContainer.SetNeedsLayout();
+            _settingsContainer.SetNeedsDraw();
         }
         finally
         {

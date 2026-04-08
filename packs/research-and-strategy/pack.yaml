@@ -112,6 +112,12 @@ catalogs:
       transport: stdio
       needs_secrets: true
       prompt_injection_risk: high
+    telegram:
+      label: Telegram
+      description: Telegram bot for research distribution and stakeholder updates
+      transport: stdio
+      needs_secrets: true
+      prompt_injection_risk: high
 
   skills:
     context-budget:
@@ -126,6 +132,8 @@ catalogs:
       label: Hypothesis Tracking
     interview-synthesis:
       label: Interview Synthesis
+    source-freshness-checker:
+      label: Source Freshness Checker
 
   agents:
     trend-researcher:
@@ -142,6 +150,8 @@ catalogs:
       label: Literature Reviewer
     stakeholder-synthesizer:
       label: Stakeholder Synthesizer
+    data-analyst:
+      label: Data Analyst
 
   rules:
     evidence-over-claims:
@@ -229,6 +239,7 @@ profiles:
           - context-budget
           - writing-plans
           - hypothesis-tracking
+          - source-freshness-checker
       agents:
         enabled:
           - trend-researcher
@@ -236,6 +247,7 @@ profiles:
           - report-writer
           - executive-summary-writer
           - literature-reviewer
+          - data-analyst
       rules:
         enabled:
           - evidence-over-claims
@@ -274,6 +286,7 @@ profiles:
           - writing-plans
           - hypothesis-tracking
           - interview-synthesis
+          - source-freshness-checker
       agents:
         enabled:
           - trend-researcher
@@ -283,6 +296,7 @@ profiles:
           - executive-summary-writer
           - literature-reviewer
           - stakeholder-synthesizer
+          - data-analyst
       rules:
         enabled:
           - evidence-over-claims
@@ -318,6 +332,7 @@ profiles:
           - http
           - exa
           - firecrawl
+          - telegram
       skills:
         enabled:
           - context-budget
@@ -326,6 +341,7 @@ profiles:
           - writing-plans
           - hypothesis-tracking
           - interview-synthesis
+          - source-freshness-checker
       agents:
         enabled:
           - trend-researcher
@@ -335,6 +351,7 @@ profiles:
           - executive-summary-writer
           - literature-reviewer
           - stakeholder-synthesizer
+          - data-analyst
       rules:
         enabled:
           - evidence-over-claims
@@ -365,6 +382,7 @@ tooling:
     - executive-summary-writer
     - literature-reviewer
     - stakeholder-synthesizer
+    - data-analyst
   managed_skills:
     - context-budget
     - obsidian-memory
@@ -372,5 +390,6 @@ tooling:
     - verification-before-completion
     - hypothesis-tracking
     - interview-synthesis
+    - source-freshness-checker
   codex_mode: research-and-strategy
   cursor_mode: research-and-strategy

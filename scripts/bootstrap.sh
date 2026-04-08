@@ -380,14 +380,15 @@ printf "${B}Stack summary [%s]: ${R}" "$USER_STACK_SUMMARY"
 read -r STACK_INPUT
 [ -n "$STACK_INPUT" ] && USER_STACK_SUMMARY="$STACK_INPUT"
 
-EXISTING_AZDO="$(detect_existing_azdo_org)"
-if [ -n "$EXISTING_AZDO" ]; then
-  AZURE_DEVOPS_ORG="$EXISTING_AZDO"
-fi
-printf "${B}Azure DevOps org name [%s]: ${R}" "$AZURE_DEVOPS_ORG"
-read -r AZDO_INPUT
-[ -n "$AZDO_INPUT" ] && AZURE_DEVOPS_ORG="$AZDO_INPUT"
-python3 - "$CONFIG_STATE_JSON" "$AZURE_DEVOPS_ORG" <<'PY'
+if contains_word azure-devops "${EFFECTIVE_MCPS[@]}"; then
+  EXISTING_AZDO="$(detect_existing_azdo_org)"
+  if [ -n "$EXISTING_AZDO" ]; then
+    AZURE_DEVOPS_ORG="$EXISTING_AZDO"
+  fi
+  printf "${B}Azure DevOps org name [%s]: ${R}" "$AZURE_DEVOPS_ORG"
+  read -r AZDO_INPUT
+  [ -n "$AZDO_INPUT" ] && AZURE_DEVOPS_ORG="$AZDO_INPUT"
+  python3 - "$CONFIG_STATE_JSON" "$AZURE_DEVOPS_ORG" <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -397,6 +398,7 @@ data = json.loads(path.read_text(encoding="utf-8"))
 data["azure_devops_org"] = sys.argv[2]
 path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 PY
+fi
 
 printf "\n${B}Planned configuration${R}\n"
 printf "  Runtime profile: ${C}%s${R}\n" "$RUNTIME_PROFILE"
@@ -420,7 +422,7 @@ if [ "$RUNTIME_PROFILE" = "custom" ]; then
   printf "  Custom enabled permission groups: ${D}%s${R}\n" "$(join_by ', ' "${CUSTOM_ENABLED_PERMISSION_GROUPS[@]}")"
 fi
 NEEDS_BITWARDEN=false
-if contains_word github "${EFFECTIVE_MCPS[@]}" || contains_word aws "${EFFECTIVE_MCPS[@]}" || contains_word tailscale "${EFFECTIVE_MCPS[@]}" || contains_word exa "${EFFECTIVE_MCPS[@]}" || contains_word firecrawl "${EFFECTIVE_MCPS[@]}" || contains_word fal-ai "${EFFECTIVE_MCPS[@]}"; then
+if contains_word github "${EFFECTIVE_MCPS[@]}" || contains_word aws "${EFFECTIVE_MCPS[@]}" || contains_word tailscale "${EFFECTIVE_MCPS[@]}" || contains_word exa "${EFFECTIVE_MCPS[@]}" || contains_word firecrawl "${EFFECTIVE_MCPS[@]}" || contains_word fal-ai "${EFFECTIVE_MCPS[@]}" || contains_word telegram "${EFFECTIVE_MCPS[@]}"; then
   NEEDS_BITWARDEN=true
 fi
 printf "  Effective MCPs: ${D}%s${R}\n" "$(join_by ', ' "${EFFECTIVE_MCPS[@]}")"
@@ -523,6 +525,9 @@ if [ "$NEEDS_BITWARDEN" = "true" ]; then
       fi
       if contains_word fal-ai "${EFFECTIVE_MCPS[@]}"; then
         BW_ITEMS+=("fal-api-key:fal.ai:https://fal.ai")
+      fi
+      if contains_word telegram "${EFFECTIVE_MCPS[@]}"; then
+        BW_ITEMS+=("mcp-telegram:Telegram Bot:https://t.me/BotFather")
       fi
       ITEMS_MISSING=false
       if [ ${#BW_ITEMS[@]} -gt 0 ]; then

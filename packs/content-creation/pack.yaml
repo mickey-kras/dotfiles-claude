@@ -124,6 +124,12 @@ catalogs:
       transport: stdio
       needs_secrets: true
       prompt_injection_risk: medium
+    telegram:
+      label: Telegram
+      description: Telegram bot messaging for content distribution and audience interaction
+      transport: stdio
+      needs_secrets: true
+      prompt_injection_risk: high
 
   skills:
     context-budget:
@@ -138,6 +144,8 @@ catalogs:
       label: Editorial Review Checklist
     content-repurposing:
       label: Content Repurposing
+    ai-discoverability:
+      label: AI Discoverability
 
   agents:
     content-strategist:
@@ -156,6 +164,8 @@ catalogs:
       label: SEO Analyst
     content-repurposer:
       label: Content Repurposer
+    social-media-adapter:
+      label: Social Media Adapter
 
   rules:
     citation-discipline:
@@ -251,6 +261,7 @@ profiles:
           - context-budget
           - writing-plans
           - editorial-review-checklist
+          - ai-discoverability
       agents:
         enabled:
           - content-strategist
@@ -259,6 +270,7 @@ profiles:
           - script-writer
           - editorial-reviewer
           - content-repurposer
+          - social-media-adapter
       rules:
         enabled:
           - citation-discipline
@@ -298,6 +310,7 @@ profiles:
           - writing-plans
           - editorial-review-checklist
           - content-repurposing
+          - ai-discoverability
       agents:
         enabled:
           - content-strategist
@@ -308,6 +321,7 @@ profiles:
           - editorial-reviewer
           - seo-analyst
           - content-repurposer
+          - social-media-adapter
       rules:
         enabled:
           - citation-discipline
@@ -347,6 +361,7 @@ profiles:
           - exa
           - firecrawl
           - fal-ai
+          - telegram
       skills:
         enabled:
           - context-budget
@@ -355,6 +370,7 @@ profiles:
           - writing-plans
           - editorial-review-checklist
           - content-repurposing
+          - ai-discoverability
       agents:
         enabled:
           - content-strategist
@@ -365,6 +381,7 @@ profiles:
           - editorial-reviewer
           - seo-analyst
           - content-repurposer
+          - social-media-adapter
       rules:
         enabled:
           - citation-discipline
@@ -398,6 +415,7 @@ tooling:
     - editorial-reviewer
     - seo-analyst
     - content-repurposer
+    - social-media-adapter
   managed_skills:
     - context-budget
     - obsidian-memory
@@ -405,5 +423,6 @@ tooling:
     - writing-plans
     - editorial-review-checklist
     - content-repurposing
+    - ai-discoverability
   codex_mode: content-creation
   cursor_mode: content-creation
