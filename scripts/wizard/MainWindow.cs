@@ -68,9 +68,6 @@ public sealed class MainWindow : Window
         SchemeManager.AddScheme("Dotfiles", scheme);
         SchemeName = "Dotfiles";
 
-        var hoverScheme = CreateHoverScheme();
-        SchemeManager.AddScheme("DotfilesHover", hoverScheme);
-
         BuildUi();
         CheckTerminalSize();
         Application.SizeChanging += (_, _) => CheckTerminalSize();
@@ -112,6 +109,8 @@ public sealed class MainWindow : Window
         var fg = ToColor(ThemeColors.Foreground);
         var accent = ToColor(ThemeColors.Accent);
         var activeBg = ToColor(ThemeColors.ActiveBackground);
+        var hoverFg = ToColor(ThemeColors.HoverForeground);
+        var hoverBg = ToColor(ThemeColors.HoverBackground);
         return baseScheme with
         {
             Normal = new Attribute(fg, bg),
@@ -120,22 +119,9 @@ public sealed class MainWindow : Window
             HotFocus = new Attribute(fg, bg),
             Disabled = new Attribute(new Color(128, 128, 128), bg),
             Active = new Attribute(accent, activeBg),
-            Highlight = new Attribute(fg, bg),
+            Highlight = new Attribute(hoverFg, hoverBg),
             Editable = new Attribute(fg, new Color(88, 88, 88)),
             ReadOnly = new Attribute(accent, new Color(18, 18, 18)),
-        };
-    }
-
-    private static Scheme CreateHoverScheme()
-    {
-        var hoverFg = ToColor(ThemeColors.HoverForeground);
-        var hoverBg = ToColor(ThemeColors.HoverBackground);
-        return SchemeManager.GetScheme("Dotfiles") with
-        {
-            Normal = new Attribute(hoverFg, hoverBg),
-            Focus = new Attribute(hoverFg, hoverBg),
-            HotNormal = new Attribute(hoverFg, hoverBg),
-            HotFocus = new Attribute(hoverFg, hoverBg),
         };
     }
 
@@ -143,10 +129,7 @@ public sealed class MainWindow : Window
 
     private static void AttachHover(View view)
     {
-        view.SchemeName = "Dotfiles";
-        view.WantMousePositionReports = true;
-        view.MouseEnter += (_, _) => { view.SchemeName = "DotfilesHover"; };
-        view.MouseLeave += (_, _) => { view.SchemeName = "Dotfiles"; };
+        view.HighlightStates = MouseState.In;
     }
 
     private static Dictionary<string, string> LoadChezmoiData()
