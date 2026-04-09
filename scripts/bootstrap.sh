@@ -503,12 +503,14 @@ if [ "$NEEDS_BITWARDEN" = "true" ]; then
       # Re-apply without dropping the selected profile state once Bitwarden is ready.
       write_chezmoi_config
       printf "\n${B}Re-applying dotfiles with Bitwarden-backed MCPs...${R}\n"
-      # The run_onchange_ install scripts hash their own content, not the
-      # environment. Their content hasn't changed since the first apply, so
-      # chezmoi would normally skip them - but we need them to re-run now
-      # that Bitwarden secrets are available. Clear the script state bucket
-      # to force a rerun.
-      chezmoi state delete-bucket --bucket=scriptState >/dev/null 2>&1 || true
+      # The run_onchange_ install scripts hash their own rendered content,
+      # which doesn't depend on whether Bitwarden is unlocked - so chezmoi
+      # would normally skip them on the second apply and secret-backed MCPs
+      # would never register. Clear the specific entryState entries so all
+      # three install scripts rerun exactly once with secrets available.
+      for script_entry in install-claude-mcps.sh install-claude-pack-assets.sh install-managed-skills.sh; do
+        chezmoi state delete --bucket=entryState --key="$HOME/scripts/chezmoi/$script_entry" >/dev/null 2>&1 || true
+      done
       chezmoi apply
       printf "  ${G}+${R} Bitwarden-backed MCPs configured\n"
     else
