@@ -322,5 +322,86 @@ class TestCliInterface(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
 
+class TestPythonNodeResolverParity(unittest.TestCase):
+    """Guards against drift between pack_state.py (Python) and
+    scripts/lib/pack-resolver.mjs (Node). Both implement normalize_selection
+    and profile matching; both are used in different code paths."""
+
+    def _run_node_resolver(self, data):
+        import shutil
+        import subprocess
+        if not shutil.which("node"):
+            self.skipTest("node not installed")
+        cli = str(Path(SOURCE_DIR) / "scripts" / "lib" / "resolve-state-cli.mjs")
+        result = subprocess.run(
+            ["node", cli,
+             "--repo-root", SOURCE_DIR,
+             "--pack-id", "software-development",
+             "--data-json", json.dumps(data)],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            self.skipTest(f"node resolver unavailable: {result.stderr.strip()}")
+        return json.loads(result.stdout)
+
+    def test_enabled_sets_match_for_every_preset_profile(self):
+        pack = pack_state.load_pack(SOURCE_DIR, "software-development")
+        for profile_name, profile in pack["profiles"].items():
+            with self.subTest(profile=profile_name):
+                selection = profile["selection"]
+                # Flat chezmoi-style data: matches what the wizard writes and
+                # what both resolvers expect in production.
+                data = {
+                    "capability_pack": "software-development",
+                    "pack_id": "software-development",
+                    "profile_selected": profile_name,
+                    "profile_mode": "preset",
+                    "selection_enabled_mcps": selection["mcps"]["enabled"],
+                    "selection_enabled_skills": selection["skills"]["enabled"],
+                    "selection_enabled_agents": selection["agents"]["enabled"],
+                    "selection_enabled_rules": selection["rules"]["enabled"],
+                    "selection_enabled_permissions": selection["permissions"]["enabled"],
+                }
+                node_resolved = self._run_node_resolver(data)["resolved"]
+                py_resolved = pack_state.resolved_state(SOURCE_DIR, data)["resolved"]
+
+                for section in ("mcps", "skills", "agents", "rules"):
+                    self.assertEqual(
+                        sorted(py_resolved[section]["enabled"]),
+                        sorted(node_resolved[section]["enabled"]),
+                        f"{section} mismatch for profile {profile_name}",
+                    )
+                self.assertEqual(
+                    sorted(py_resolved["permissions"]["enabled"]),
+                    sorted(node_resolved["permissions"]["enabled"]),
+                    f"permissions mismatch for profile {profile_name}",
+                )
+
+    def test_both_agree_on_custom_when_selection_does_not_match_any_preset(self):
+        """An unmatched selection must resolve to profile_mode="custom" on
+        both resolvers. Python returns "" from find_matching_profile and Node
+        returns null; both are falsy, so both should land in custom mode."""
+        data = {
+            "capability_pack": "software-development",
+            "pack_id": "software-development",
+            "profile_selected": "balanced",
+            "profile_mode": "custom",
+            "selection_enabled_mcps": ["context7"],
+            "selection_enabled_skills": [],
+            "selection_enabled_agents": [],
+            "selection_enabled_rules": [],
+            "selection_enabled_permissions": [],
+        }
+        node_resolved = self._run_node_resolver(data)
+        py_resolved = pack_state.resolved_state(SOURCE_DIR, data)
+
+        self.assertEqual(node_resolved["profile"]["mode"], "custom")
+        self.assertEqual(py_resolved["state"]["profile"]["mode"], "custom")
+        self.assertEqual(
+            sorted(node_resolved["resolved"]["mcps"]["enabled"]),
+            sorted(py_resolved["resolved"]["mcps"]["enabled"]),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
