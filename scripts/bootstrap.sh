@@ -479,7 +479,8 @@ if [ "$NEEDS_BITWARDEN" = "true" ]; then
           else
             printf "  ${C}%s${R} ${D}(%s)${R}\n" "$ITEM_LABEL" "$ITEM_URL"
             printf "  API key: "
-            read -r API_KEY
+            read -rs API_KEY
+            printf "\n"
             if [ -n "$API_KEY" ]; then
               TEMPLATE=$(bw get template item)
               echo "$TEMPLATE" | \
