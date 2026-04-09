@@ -8,8 +8,8 @@ set -euo pipefail
 
 FAILED=0
 HOME_SLASHED="{{ replace "\\" "/" .chezmoi.homeDir }}"
-{{- $runtime := includeTemplate "templates/resolved-state.json" . | fromJson -}}
-{{- $resolved := $runtime.resolved -}}
+{{ $runtime := includeTemplate "templates/resolved-state.json" . | fromJson -}}
+{{ $resolved := $runtime.resolved -}}
 RUNTIME_PROFILE="{{ index $runtime "state" "profile" "requested" }}"
 PROFILE_BASE="{{ index $runtime "state" "profile" "selected" }}"
 AZURE_DEVOPS_ORG="{{ index $resolved "settings" "azure_devops_org" }}"

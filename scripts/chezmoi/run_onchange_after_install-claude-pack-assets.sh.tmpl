@@ -6,8 +6,8 @@
 set -euo pipefail
 
 HOME_SLASHED="{{ replace "\\" "/" .chezmoi.homeDir }}"
-{{- $runtime := includeTemplate "templates/resolved-state.json" . | fromJson -}}
-{{- $resolved := $runtime.resolved -}}
+{{ $runtime := includeTemplate "templates/resolved-state.json" . | fromJson -}}
+{{ $resolved := $runtime.resolved -}}
 CAPABILITY_PACK="{{ index $resolved "pack_id" }}"
 PACK_CLAUDE_DIR="$HOME_SLASHED/dotfiles/packs/$CAPABILITY_PACK/claude"
 CLAUDE_AGENTS_DIR="$HOME_SLASHED/.claude/agents"
