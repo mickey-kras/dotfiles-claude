@@ -68,6 +68,9 @@ public sealed class MainWindow : Window
         SchemeManager.AddScheme("Dotfiles", scheme);
         SchemeName = "Dotfiles";
 
+        var selectedScheme = CreateSelectedScheme();
+        SchemeManager.AddScheme("DotfilesSelected", selectedScheme);
+
         BuildUi();
         CheckTerminalSize();
         Application.SizeChanging += (_, _) => CheckTerminalSize();
@@ -125,11 +128,37 @@ public sealed class MainWindow : Window
         };
     }
 
+    private static Scheme CreateSelectedScheme()
+    {
+        var baseScheme = SchemeManager.GetScheme("Base");
+        var selFg = ToColor(ThemeColors.SelectedForeground);
+        var selBg = ToColor(ThemeColors.SelectedBackground);
+        var hoverFg = ToColor(ThemeColors.HoverForeground);
+        var hoverBg = ToColor(ThemeColors.HoverBackground);
+        return baseScheme with
+        {
+            Normal = new Attribute(selFg, selBg),
+            Focus = new Attribute(selFg, selBg),
+            HotNormal = new Attribute(selFg, selBg),
+            HotFocus = new Attribute(selFg, selBg),
+            Disabled = new Attribute(new Color(128, 128, 128), selBg),
+            Active = new Attribute(hoverFg, hoverBg),
+            Highlight = new Attribute(hoverFg, hoverBg),
+            Editable = new Attribute(selFg, selBg),
+            ReadOnly = new Attribute(selFg, selBg),
+        };
+    }
+
     private static Color ToColor(Rgb rgb) => new(rgb.R, rgb.G, rgb.B);
 
     private static void AttachHover(View view)
     {
         view.HighlightStates = MouseState.In;
+    }
+
+    private static void ApplySelectedScheme(View view, bool selected)
+    {
+        view.SchemeName = selected ? "DotfilesSelected" : "Dotfiles";
     }
 
     private static Dictionary<string, string> LoadChezmoiData()
@@ -329,12 +358,16 @@ public sealed class MainWindow : Window
                 CanFocus = true,
             };
             AttachHover(lbl);
+            ApplySelectedScheme(lbl, i == selectedIdx);
             lbl.MouseClick += (_, args) =>
             {
                 if (args.Flags.HasFlag(MouseFlags.Button1Clicked))
                 {
                     for (var j = 0; j < items.Count; j++)
+                    {
                         items[j].Text = FormatRadioItem(labels[j], j == idx);
+                        ApplySelectedScheme(items[j], j == idx);
+                    }
                     onSelect(idx);
                     args.Handled = true;
                 }
@@ -348,7 +381,10 @@ public sealed class MainWindow : Window
     private void UpdateRadioLabels(List<Label> items, string[] labels, int selectedIdx)
     {
         for (var i = 0; i < items.Count; i++)
+        {
             items[i].Text = FormatRadioItem(labels[i], i == selectedIdx);
+            ApplySelectedScheme(items[i], i == selectedIdx);
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -500,11 +536,13 @@ public sealed class MainWindow : Window
                 {
                     _state.EnabledMcps.Remove(capturedId);
                 }
+                ApplySelectedScheme(cb, args.Value is CheckState.Checked);
                 SnapProfileIfNeeded();
                 UpdateSummary();
                 RebuildMcpSettingsContent();
             };
             AttachHover(cb);
+            ApplySelectedScheme(cb, cb.CheckedState == CheckState.Checked);
             checks.Add(cb);
             mcpFrame.Add(cb);
             y++;
@@ -653,10 +691,12 @@ public sealed class MainWindow : Window
                 {
                     list.Remove(capturedId);
                 }
+                ApplySelectedScheme(cb, args.Value is CheckState.Checked);
                 SnapProfileIfNeeded();
                 UpdateSummary();
             };
             AttachHover(cb);
+            ApplySelectedScheme(cb, cb.CheckedState == CheckState.Checked);
             checks.Add(cb);
             view.Add(cb);
             y++;

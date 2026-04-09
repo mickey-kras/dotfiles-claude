@@ -14,6 +14,10 @@ public static class ThemeColors
     // Hover highlight uses the same colors as Active
     public static readonly Rgb HoverForeground = Accent;
     public static readonly Rgb HoverBackground = ActiveBackground;
+
+    // Selected highlight: dimmer than hover, for currently-chosen items
+    public static readonly Rgb SelectedForeground = new(220, 220, 220);
+    public static readonly Rgb SelectedBackground = new(40, 40, 80);
 }
 
 public static class WizardHelpers
