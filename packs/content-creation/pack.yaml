@@ -232,6 +232,8 @@ catalogs:
         - Bash(node *)
         - Bash(python3 *)
         - Bash(npx *)
+        - Bash(ffmpeg *)
+        - Bash(ffprobe *)
     web_access:
       label: Web Access
       allow:

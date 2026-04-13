@@ -6,6 +6,8 @@
       "Bash(chmod +x *)",
       "Bash(cp *)",
       "Bash(curl *)",
+      "Bash(ffmpeg *)",
+      "Bash(ffprobe *)",
       "Bash(find *)",
       "Bash(git diff*)",
       "Bash(git log*)",

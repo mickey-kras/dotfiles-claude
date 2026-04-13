@@ -16,3 +16,4 @@ Profile guidance:
 Primary playbooks:
 - [`editorial-loop.md`](./playbooks/editorial-loop.md)
 - [`campaign-build.md`](./playbooks/campaign-build.md)
+- [`remotion.md`](./playbooks/remotion.md) — programmatic video with React (requires `ffmpeg` on `$PATH`)
