@@ -132,6 +132,7 @@ def legacy_config(source_dir, state):
         "user_name": state.get("user_name", ""),
         "user_role_summary": state.get("user_role_summary", ""),
         "user_stack_summary": state.get("user_stack_summary", ""),
+        "aia_enabled": bool(state.get("aia_enabled", False)),
         "matched_profile": matched_profile,
     }
 

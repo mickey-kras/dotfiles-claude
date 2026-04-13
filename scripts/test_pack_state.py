@@ -204,6 +204,38 @@ class TestLegacyConfig(unittest.TestCase):
         self.assertEqual(config["user_role_summary"], "")
         self.assertEqual(config["user_stack_summary"], "")
 
+    def test_aia_enabled_defaults_to_false(self):
+        pack = pack_state.load_pack(SOURCE_DIR, "software-development")
+        default_profile = pack["defaults"]["profile"]
+        profile_selection = pack["profiles"][default_profile]["selection"]
+
+        state = {
+            "capability_pack": "software-development",
+            "profile": {"selected": default_profile, "mode": "preset"},
+            "selection": profile_selection,
+        }
+
+        config = pack_state.legacy_config(SOURCE_DIR, state)
+
+        self.assertIn("aia_enabled", config)
+        self.assertEqual(config["aia_enabled"], False)
+
+    def test_aia_enabled_round_trips_true(self):
+        pack = pack_state.load_pack(SOURCE_DIR, "software-development")
+        default_profile = pack["defaults"]["profile"]
+        profile_selection = pack["profiles"][default_profile]["selection"]
+
+        state = {
+            "capability_pack": "software-development",
+            "profile": {"selected": default_profile, "mode": "preset"},
+            "selection": profile_selection,
+            "aia_enabled": True,
+        }
+
+        config = pack_state.legacy_config(SOURCE_DIR, state)
+
+        self.assertEqual(config["aia_enabled"], True)
+
     def test_profile_mode_is_valid(self):
         pack = pack_state.load_pack(SOURCE_DIR, "software-development")
         default_profile = pack["defaults"]["profile"]

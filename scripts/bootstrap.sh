@@ -250,7 +250,10 @@ order = [
     "obsidian_vault_path",
     "azure_devops_org",
     "content_workspace",
+    "aia_enabled",
 ]
+
+bool_keys = {"aia_enabled"}
 
 def toml_quote(value):
     return json.dumps(value)
@@ -261,7 +264,9 @@ def toml_array(values):
 print("[data]")
 for key in order:
     value = config.get(key, "")
-    if isinstance(value, list):
+    if key in bool_keys:
+        print(f"  {key} = {'true' if value else 'false'}")
+    elif isinstance(value, list):
         print(f"  {key} = {toml_array(value)}")
     else:
         print(f"  {key} = {toml_quote(value)}")

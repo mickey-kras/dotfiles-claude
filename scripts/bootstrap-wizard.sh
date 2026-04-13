@@ -149,6 +149,44 @@ state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
 PY
 }
 
+set_bool_value() {
+  local key="$1"
+  local value="$2"
+  python3 - "$STATE_FILE" "$key" "$value" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+state_path = Path(sys.argv[1])
+key = sys.argv[2]
+value = sys.argv[3].lower() in ("1", "true", "yes", "y")
+state = json.loads(state_path.read_text(encoding="utf-8"))
+state[key] = value
+state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+PY
+}
+
+prompt_aia_enabled() {
+  local current default response value
+  current="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("aia_enabled", False))' "$STATE_FILE")"
+  if [ "$current" = "True" ]; then
+    default="y"
+  else
+    default="n"
+  fi
+  printf "Enable aia (Agents In Accord) integration on this machine? [y/N, current=%s]: " "$default" >&2
+  read -r response <&3
+  if [ -z "$response" ]; then
+    value="$default"
+  else
+    value="$response"
+  fi
+  case "$value" in
+    y|Y|yes|YES|true|TRUE|1) set_bool_value aia_enabled true ;;
+    *) set_bool_value aia_enabled false ;;
+  esac
+}
+
 get_default_profile() {
   local pack_id="$1"
   python3 - "$SOURCE_DIR" "$PACK_STATE_PY" "$pack_id" <<'PY'
@@ -271,3 +309,4 @@ refresh_runtime
 local_profile_id="$(choose_profile)"
 set_profile "$local_pack_id" "$local_profile_id"
 edit_settings
+prompt_aia_enabled

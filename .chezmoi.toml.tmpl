@@ -9,6 +9,7 @@
 {{- $obsidianVaultPath := promptStringOnce . "obsidian_vault_path" "Obsidian vault path (press Enter to skip)" -}}
 {{- $azureDevOpsOrg := promptStringOnce . "azure_devops_org" "Azure DevOps org name (press Enter to skip)" -}}
 {{- $contentWorkspace := promptStringOnce . "content_workspace" "Content workspace path (press Enter to skip)" -}}
+{{- $aiaEnabled := promptBoolOnce . "aia_enabled" "Enable aia (Agents In Accord) integration on this machine (true/false)" -}}
 
 {{- /*
   We intentionally DO NOT emit profile_selected, profile_mode, or any
@@ -30,3 +31,4 @@
   obsidian_vault_path = {{ $obsidianVaultPath | quote }}
   azure_devops_org = {{ $azureDevOpsOrg | quote }}
   content_workspace = {{ $contentWorkspace | quote }}
+  aia_enabled = {{ $aiaEnabled }}
