@@ -94,3 +94,19 @@ test("content-creation campaign renders pack-specific outputs", () => {
   assert.match(packAssets, /social-media-adapter/);
   assert.match(packAssets, /seo-analyst/);
 });
+
+test("aia_enabled=false (default) omits the SessionStart hook block", () => {
+  const claude = JSON.parse(renderTemplate(path.join(repoRoot, "dot_claude", "settings.json.tmpl"), "software-development-balanced.json"));
+  assert.equal(claude.SessionStart, undefined, "SessionStart block must not exist when aia_enabled is false or absent");
+});
+
+test("aia_enabled=true emits the brew-managed SessionStart hook", () => {
+  const claude = JSON.parse(renderTemplate(path.join(repoRoot, "dot_claude", "settings.json.tmpl"), "software-development-balanced-aia.json"));
+  assert.ok(Array.isArray(claude.SessionStart), "SessionStart block must be emitted when aia_enabled is true");
+  assert.equal(claude.SessionStart.length, 1);
+  const entry = claude.SessionStart[0];
+  assert.equal(entry.matcher, "*");
+  assert.equal(entry.hooks.length, 1);
+  assert.equal(entry.hooks[0].type, "command");
+  assert.equal(entry.hooks[0].command, "/opt/homebrew/opt/aia/libexec/hooks/session-start.sh");
+});

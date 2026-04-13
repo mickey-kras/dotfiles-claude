@@ -1,0 +1,12 @@
+# aia (Agents In Accord) integration — optional, disabled by default.
+#
+# When enabled, dot_claude/settings.json.tmpl emits a top-level SessionStart
+# hook that invokes the brew-managed aia session-start script. The dotfiles
+# installer never auto-installs aia itself — it expects the user to have run
+# `brew tap mickey-kras/aia && brew install aia` first. A run_onchange verifier
+# surfaces a clear message if the flag is enabled but the binary is missing.
+#
+# Override per-machine by setting aia_enabled in the state file the wizard
+# writes, or by editing this default.
+
+aia_enabled: false

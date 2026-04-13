@@ -205,6 +205,18 @@ Optional explicit memory path:
 - configured through the installer with a vault path
 - stays local-first and replaces the generic `memory` server wiring when selected
 
+### Optional: aia (Agents In Accord) session hook
+
+[aia](https://github.com/mickey-kras/aia) is an opt-in session-start hook that surfaces the agent Code of Conduct, naming ritual, and `/handover` skill at the top of every Claude Code session. **Disabled by default.**
+
+To enable:
+1. Install aia itself — `brew tap mickey-kras/aia && brew install aia`
+2. Flip the default in `.chezmoidata/aia.yaml` to `aia_enabled: true` (or set `aia_enabled: true` in your wizard state file)
+3. Run `chezmoi apply` — `dot_claude/settings.json.tmpl` will emit a top-level `SessionStart` block pointing at the brew-managed hook at `/opt/homebrew/opt/aia/libexec/hooks/session-start.sh`
+4. `scripts/chezmoi/run_onchange_after_verify-aia.sh.tmpl` verifies the binary and the hook path are both present and fails loudly if not — the installer never runs `brew install` on your behalf
+
+The wizard does not yet expose this toggle in its UI — it is a file-level flag for now, tracked in `.chezmoidata/aia.yaml`. A follow-up change will add a dedicated wizard section.
+
 ### Intended `~/.claude` layout
 
 The goal is to keep `~/.claude` small and honest: only live configuration and capability surfaces should remain there. Runtime residue like transcripts, caches, telemetry, paste history, shell snapshots, and temporary session state should be disposable.

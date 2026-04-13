@@ -4,6 +4,7 @@
 {{- $requestedProfile := index $state "profile" "requested" -}}
 {{- $allow := index $resolved "permissions" "allow" | default (list) -}}
 {{- $deny := index $resolved "permissions" "deny" | default (list) -}}
+{{- $aiaEnabled := .aia_enabled | default false -}}
 {
   "permissions": {
     "allow": [
@@ -71,6 +72,19 @@
       ]
     }
   ],
+{{- if $aiaEnabled }}
+  "SessionStart": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "/opt/homebrew/opt/aia/libexec/hooks/session-start.sh"
+        }
+      ]
+    }
+  ],
+{{- end }}
   "env": {
     "EDITOR": "code --wait",
     "ENABLE_CLAUDEAI_MCP_SERVERS": "false",

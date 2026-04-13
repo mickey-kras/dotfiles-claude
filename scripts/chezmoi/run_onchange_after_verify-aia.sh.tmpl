@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Verifier for the optional aia (Agents In Accord) integration.
+#
+# When aia_enabled is false (the default), this script is a no-op — the
+# template still renders stable content so run_onchange does not re-fire
+# on every `chezmoi apply`.
+#
+# When aia_enabled is true, the script checks that the brew-installed `aia`
+# CLI is present and that the session-start hook path referenced by
+# dot_claude/settings.json.tmpl exists. It does NOT auto-install anything —
+# system package mutation must be an explicit human decision. If prereqs
+# are missing, it prints a clear message and exits non-zero so the chezmoi
+# apply run surfaces the gap.
+
+set -euo pipefail
+
+AIA_ENABLED="{{ .aia_enabled | default false }}"
+EXPECTED_HOOK="/opt/homebrew/opt/aia/libexec/hooks/session-start.sh"
+
+if [ "$AIA_ENABLED" != "true" ]; then
+  exit 0
+fi
+
+info() { printf '[aia-verify] %s\n' "$*"; }
+warn() { printf '[aia-verify] WARNING: %s\n' "$*" >&2; }
+fail() { printf '[aia-verify] ERROR: %s\n' "$*" >&2; exit 1; }
+
+if ! command -v aia >/dev/null 2>&1; then
+  warn "aia_enabled=true but the 'aia' CLI is not on PATH."
+  warn "install it with:"
+  warn "  brew tap mickey-kras/aia"
+  warn "  brew install aia"
+  warn "or set aia_enabled=false in .chezmoidata/aia.yaml (or your state file) to disable."
+  fail "aia CLI missing; refusing to leave dot_claude/settings.json pointing at a non-existent hook."
+fi
+
+if [ ! -x "$EXPECTED_HOOK" ]; then
+  warn "aia CLI is installed but the expected hook is missing at:"
+  warn "  $EXPECTED_HOOK"
+  warn "this path is the versionless symlink maintained by Homebrew for the aia formula."
+  warn "try: brew reinstall aia"
+  fail "aia hook script not found at the expected brew path."
+fi
+
+info "aia integration verified. hook: $EXPECTED_HOOK"
